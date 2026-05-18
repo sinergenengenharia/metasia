@@ -1,0 +1,3331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Metas Cascateadas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --primary: #1a2744;
+    --primary-light: #2d3f6b;
+    --accent: #e8a020;
+    --accent-light: #f5c85a;
+    --success: #2d8c5e;
+    --success-light: #e8f7ef;
+    --warning: #c4610a;
+    --warning-light: #fef3e2;
+    --danger: #b53030;
+    --danger-light: #fce8e8;
+    --info: #1a5fa8;
+    --info-light: #e8f0fa;
+    --bg: #f4f3ef;
+    --surface: #ffffff;
+    --surface2: #f9f8f5;
+    --border: #e0ddd5;
+    --border2: #ccc9c0;
+    --text: #1a1a1a;
+    --text2: #4a4840;
+    --text3: #8a8680;
+    --radius: 10px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-lg: 0 4px 20px rgba(0,0,0,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* SIDEBAR */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 260px;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .sidebar-logo h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--accent-light);
+    line-height: 1.2;
+  }
+
+  .sidebar-logo p {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .sidebar-section {
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .sidebar-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.35);
+    padding: 0 20px 8px;
+  }
+
+  .sidebar-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    border-radius: 0;
+    transition: all 0.15s;
+  }
+
+  .sidebar-btn:hover, .sidebar-btn.active {
+    background: rgba(255,255,255,0.1);
+    color: white;
+  }
+
+  .sidebar-btn.active {
+    border-left: 3px solid var(--accent);
+    padding-left: 17px;
+  }
+
+  .sidebar-btn i { width: 18px; font-size: 14px; }
+
+  /* MAIN */
+  .main {
+    margin-left: 260px;
+    flex: 1;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .topbar h2 { font-size: 18px; font-weight: 500; }
+
+  .topbar-actions { display: flex; gap: 10px; }
+
+  .page { display: none; padding: 32px; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--primary-light); }
+
+  .btn-accent {
+    background: var(--accent);
+    color: var(--primary);
+  }
+  .btn-accent:hover { background: var(--accent-light); }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+  }
+  .btn-outline:hover { background: var(--surface2); }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text3);
+    padding: 6px 10px;
+  }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+  .btn-danger-ghost {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--danger);
+    padding: 6px 10px;
+  }
+  .btn-danger-ghost:hover { background: var(--danger-light); }
+
+  .btn-success {
+    background: var(--success);
+    color: white;
+  }
+  .btn-success:hover { opacity: 0.9; }
+
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-lg { padding: 12px 24px; font-size: 15px; }
+
+  /* INPUTS */
+  input[type="text"], input[type="number"], textarea, select {
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border 0.15s;
+    width: 100%;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26,39,68,0.08);
+  }
+
+  textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+  label { font-size: 12px; font-weight: 500; color: var(--text2); display: block; margin-bottom: 4px; }
+
+  .form-group { margin-bottom: 14px; }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  /* STEPS */
+  .steps {
+    display: flex;
+    gap: 0;
+    margin-bottom: 32px;
+    position: relative;
+  }
+
+  .steps::before {
+    content: '';
+    position: absolute;
+    top: 14px;
+    left: 28px;
+    right: 28px;
+    height: 2px;
+    background: var(--border);
+    z-index: 0;
+  }
+
+  .step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--text3);
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg);
+  }
+
+  .step.done .step-num { background: var(--success); color: white; }
+  .step.active .step-num { background: var(--primary); color: white; }
+
+  .step-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-align: center;
+    line-height: 1.3;
+    max-width: 80px;
+  }
+  .step.active .step-label { color: var(--primary); font-weight: 500; }
+  .step.done .step-label { color: var(--success); }
+
+  /* BADGE */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .badge-blue { background: var(--info-light); color: var(--info); }
+  .badge-green { background: var(--success-light); color: var(--success); }
+  .badge-amber { background: var(--warning-light); color: var(--warning); }
+  .badge-red { background: var(--danger-light); color: var(--danger); }
+  .badge-gray { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+
+  /* META CARD */
+  .meta-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    background: var(--surface);
+    position: relative;
+  }
+
+  .meta-card.editing { border-color: var(--primary); }
+
+  .meta-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .meta-idx {
+    min-width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    background: var(--primary);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+  }
+
+  .meta-text {
+    flex: 1;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+
+  .meta-text-edit { display: none; }
+  .meta-text-edit.show { display: block; }
+  .meta-text-view.hide { display: none; }
+
+  .meta-actions {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .meta-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .peso-input {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .peso-input input {
+    width: 60px;
+    text-align: center;
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+
+  .peso-display {
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  .peso-warning {
+    font-size: 11px;
+    color: var(--danger);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .meta-obj-tag {
+    font-size: 11px;
+    color: var(--info);
+    background: var(--info-light);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  /* SMART indicator */
+  .smart-score {
+    display: inline-flex;
+    gap: 3px;
+    align-items: center;
+  }
+
+  .smart-letter {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--success);
+    color: white;
+  }
+
+  .smart-letter.off {
+    background: var(--border);
+    color: var(--text3);
+  }
+
+  /* HIERARCHY TREE */
+  .org-tree {
+    font-size: 13px;
+  }
+
+  .org-node {
+    margin-bottom: 4px;
+  }
+
+  .org-node-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .org-node-label:hover { border-color: var(--primary); }
+  .org-node-label.selected { border-color: var(--primary); background: rgba(26,39,68,0.04); font-weight: 500; }
+
+  .org-children {
+    padding-left: 24px;
+    margin-top: 4px;
+    border-left: 2px solid var(--border);
+    margin-left: 12px;
+    padding-top: 4px;
+  }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: var(--surface2); font-weight: 500; color: var(--text2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 28px;
+    width: 580px;
+    max-width: 95vw;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .modal-title { font-size: 17px; font-weight: 600; }
+
+  /* LOADING */
+  .loading-bar {
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+    border-radius: 2px;
+    animation: loadingAnim 1.5s ease-in-out infinite;
+  }
+
+  @keyframes loadingAnim {
+    0% { width: 0; opacity: 1; }
+    80% { width: 100%; opacity: 1; }
+    100% { width: 100%; opacity: 0; }
+  }
+
+  .ai-thinking {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    background: var(--info-light);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--info);
+    margin: 10px 0;
+  }
+
+  .ai-thinking i { animation: spin 1.5s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* DASHBOARD */
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--primary);
+    font-family: 'DM Serif Display', serif;
+  }
+
+  .stat-card .stat-label {
+    font-size: 12px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 4px;
+  }
+
+  /* PESSOA CARD */
+  .pessoa-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .pessoa-info { flex: 1; min-width: 0; }
+  .pessoa-name { font-size: 13px; font-weight: 500; }
+  .pessoa-role { font-size: 11px; color: var(--text3); }
+
+  /* SIMILARITY WARNING */
+  .similarity-warning {
+    background: #fff8e6;
+    border: 1px solid #f5c020;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #7a5c00;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin-top: 6px;
+  }
+
+  /* PROGRESS */
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+
+  /* TABS */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .tab {
+    padding: 10px 18px;
+    font-size: 13px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    color: var(--text3);
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 500; }
+
+  /* ALERTS */
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .alert-info { background: var(--info-light); color: var(--info); border: 1px solid #b5d4f4; }
+  .alert-success { background: var(--success-light); color: var(--success); border: 1px solid #9fe1cb; }
+  .alert-warning { background: var(--warning-light); color: var(--warning); border: 1px solid #fac775; }
+
+  /* SCROLL */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    margin: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tag:hover { border-color: var(--primary); color: var(--primary); }
+  .tag.selected { background: var(--primary); color: white; border-color: var(--primary); }
+
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  .text-muted { color: var(--text3); font-size: 12px; }
+  .text-sm { font-size: 13px; }
+
+  .flex { display: flex; }
+  .flex-col { flex-direction: column; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .gap-8 { gap: 8px; }
+  .gap-12 { gap: 12px; }
+  .gap-16 { gap: 16px; }
+  .mt-8 { margin-top: 8px; }
+  .mt-16 { margin-top: 16px; }
+
+  .cascata-section {
+    border-left: 3px solid var(--accent);
+    padding-left: 16px;
+    margin-bottom: 24px;
+  }
+
+  .cascata-level {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .cascata-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 2px;
+  }
+
+  .cascata-sub {
+    font-size: 12px;
+    color: var(--text3);
+    margin-bottom: 12px;
+  }
+
+  .peso-total-bar {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+
+  .peso-ok { border-color: var(--success); background: var(--success-light); color: var(--success); }
+  .peso-err { border-color: var(--danger); background: var(--danger-light); color: var(--danger); }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text3);
+  }
+  .empty-state i { font-size: 40px; margin-bottom: 12px; display: block; opacity: 0.3; }
+  .empty-state p { font-size: 14px; }
+
+  .chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--primary);
+    color: white;
+    margin-right: 4px;
+  }
+
+  /* Scrollable metas container */
+  .metas-container { max-height: 600px; overflow-y: auto; padding-right: 4px; }
+
+  /* FAIXAS DE RESULTADO */
+  .faixas-section {
+    margin-top: 12px;
+    border-top: 1px dashed var(--border2);
+    padding-top: 10px;
+  }
+  .faixas-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .faixas-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .faixas-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .faixa-item {
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid;
+    position: relative;
+  }
+  .faixa-0   { background:#fef2f2; border-color:#fca5a5; }
+  .faixa-50  { background:#fff7ed; border-color:#fdba74; }
+  .faixa-75  { background:#fefce8; border-color:#fde047; }
+  .faixa-100 { background:#f0fdf4; border-color:#86efac; }
+  .faixa-pct {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .faixa-0   .faixa-pct { color: #dc2626; }
+  .faixa-50  .faixa-pct { color: #ea580c; }
+  .faixa-75  .faixa-pct { color: #ca8a04; }
+  .faixa-100 .faixa-pct { color: #16a34a; }
+  .faixa-sublabel {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 6px;
+    opacity: .7;
+  }
+  .faixa-0   .faixa-sublabel { color: #dc2626; }
+  .faixa-50  .faixa-sublabel { color: #ea580c; }
+  .faixa-75  .faixa-sublabel { color: #ca8a04; }
+  .faixa-100 .faixa-sublabel { color: #16a34a; }
+  .faixa-desc {
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--text2);
+    min-height: 36px;
+  }
+  .faixa-desc-edit {
+    width: 100%;
+    font-size: 11px;
+    line-height: 1.4;
+    resize: vertical;
+    min-height: 54px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    background: rgba(255,255,255,.8);
+    display: none;
+  }
+  .faixa-desc-edit.show { display: block; }
+  .faixa-desc.hide { display: none; }
+  .faixa-edit-btn {
+    position: absolute;
+    top: 6px; right: 6px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: rgba(0,0,0,.25);
+    font-size: 11px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: all .15s;
+  }
+  .faixa-edit-btn:hover { color: rgba(0,0,0,.6); background: rgba(0,0,0,.06); }
+  .faixas-ai-btn {
+    font-size: 11px;
+    padding: 4px 9px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .faixas-ai-loading {
+    font-size: 11px;
+    color: var(--info);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0;
+  }
+  @media (max-width: 700px) {
+    .faixas-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 900px) {
+    .sidebar { width: 200px; }
+    .main { margin-left: 200px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div id="apikey-banner" style="background:#1a2744;color:white;padding:10px 24px;display:none;align-items:center;gap:12px;font-size:13px;position:sticky;top:0;z-index:999;border-bottom:2px solid #e8a020">
+  <i class="fas fa-key" style="color:#e8a020"></i>
+  <span style="white-space:nowrap;color:rgba(255,255,255,0.7)">Anthropic API Key:</span>
+  <input type="password" id="apikey-input" placeholder="sk-ant-..." autocomplete="off"
+    style="flex:1;max-width:420px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:6px;padding:6px 12px;font-size:13px;outline:none"
+    oninput="saveApiKey(this.value)">
+  <span id="apikey-status" style="font-size:12px;color:rgba(255,255,255,0.5)">Cole sua chave para ativar a IA</span>
+  <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:#e8a020;font-size:12px;text-decoration:none;white-space:nowrap"><i class="fas fa-external-link-alt"></i> Obter chave</a>
+</div>
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>MetaFlow</h1>
+      <p>Gestão de Metas por IA</p>
+    </div>
+
+    <div class="sidebar-section">
+      <p class="sidebar-label">Configuração</p>
+      <button class="sidebar-btn active" onclick="showPage('dashboard')">
+        <i class="fas fa-chart-pie"></i> Painel Geral
+      </button>
+      <button class="sidebar-btn" onclick="showPage('configuracao')">
+        <i class="fas fa-sitemap"></i> Organograma
+      </button>
+      <button class="sidebar-btn" onclick="showPage('objetivos')">
+        <i class="fas fa-bullseye"></i> Objetivos Estratégicos
+      </button>
+      <button class="sidebar-btn" onclick="showPage('projetos')">
+        <i class="fas fa-project-diagram"></i> Projetos
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <p class="sidebar-label">Cascata de Metas</p>
+      <button class="sidebar-btn" onclick="showPage('ceo')">
+        <i class="fas fa-crown"></i> CEO
+      </button>
+      <button class="sidebar-btn" onclick="showPage('diretores')">
+        <i class="fas fa-user-tie"></i> Diretores
+      </button>
+      <button class="sidebar-btn" onclick="showPage('superintendentes')">
+        <i class="fas fa-users"></i> Superintendentes
+      </button>
+      <button class="sidebar-btn" onclick="showPage('gerentes')">
+        <i class="fas fa-user-cog"></i> Gerentes
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <p class="sidebar-label">Análise</p>
+      <button class="sidebar-btn" onclick="showPage('consolidado')">
+        <i class="fas fa-table"></i> Consolidado
+      </button>
+      <button class="sidebar-btn" onclick="showPage('validacao')">
+        <i class="fas fa-clipboard-check"></i> Validação
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <h2 id="page-title">Painel Geral</h2>
+      <div class="topbar-actions">
+        <span id="ano-label" class="badge badge-blue"><i class="fas fa-calendar"></i> Ano: <span id="ano-display">2025</span></span>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="grid-3" style="margin-bottom:20px">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-metas">0</div>
+          <div class="stat-label">Metas Geradas</div>
+          <div class="progress-bar" style="margin-top:10px"><div class="progress-fill" id="prog-metas" style="width:0%"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-pessoas">0</div>
+          <div class="stat-label">Profissionais</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-objetivos">0</div>
+          <div class="stat-label">Objetivos Estratégicos</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-route"></i> Progresso da Cascata</div>
+          <div id="cascata-progress">
+            <div style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                <span>CEO</span><span id="prog-ceo-pct">0%</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" id="prog-ceo" style="width:0%"></div></div>
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                <span>Diretores</span><span id="prog-dir-pct">0%</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" id="prog-dir" style="width:0%"></div></div>
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                <span>Superintendentes</span><span id="prog-sup-pct">0%</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" id="prog-sup" style="width:0%"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                <span>Gerentes</span><span id="prog-ger-pct">0%</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" id="prog-ger" style="width:0%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="fas fa-exclamation-triangle"></i> Alertas</div>
+          <div id="alertas-container">
+            <div class="empty-state">
+              <i class="fas fa-check-circle"></i>
+              <p>Nenhum alerta no momento</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i class="fas fa-play"></i> Como Começar</div>
+        <div class="grid-3" style="margin-top:8px">
+          <div style="text-align:center;padding:16px">
+            <div style="font-size:28px;color:var(--primary);margin-bottom:8px"><i class="fas fa-sitemap"></i></div>
+            <div style="font-size:13px;font-weight:500;margin-bottom:4px">1. Configure o Organograma</div>
+            <div style="font-size:12px;color:var(--text3)">Adicione cargos, áreas e profissionais</div>
+          </div>
+          <div style="text-align:center;padding:16px">
+            <div style="font-size:28px;color:var(--accent);margin-bottom:8px"><i class="fas fa-bullseye"></i></div>
+            <div style="font-size:13px;font-weight:500;margin-bottom:4px">2. Defina os Objetivos</div>
+            <div style="font-size:12px;color:var(--text3)">Insira os objetivos estratégicos do ano</div>
+          </div>
+          <div style="text-align:center;padding:16px">
+            <div style="font-size:28px;color:var(--success);margin-bottom:8px"><i class="fas fa-robot"></i></div>
+            <div style="font-size:13px;font-weight:500;margin-bottom:4px">3. Gere com IA</div>
+            <div style="font-size:12px;color:var(--text3)">A IA cria as metas e faz o cascateamento</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIGURAÇÃO / ORGANOGRAMA -->
+    <div class="page" id="page-configuracao">
+      <div class="grid-2" style="gap:24px">
+        <div>
+          <div class="card">
+            <div class="card-title"><i class="fas fa-cog"></i> Configurações Gerais</div>
+            <div class="form-group">
+              <label>Ano das Metas</label>
+              <input type="number" id="ano-input" value="2025" min="2020" max="2035" onchange="updateAno()">
+            </div>
+            <div class="form-group">
+              <label>Nome da Empresa</label>
+              <input type="text" id="empresa-nome" value="Minha Empresa S.A." placeholder="Nome da empresa">
+            </div>
+            <div class="divider"></div>
+            <button class="btn btn-danger-ghost" style="border:1px solid var(--danger)" onclick="resetarDados()">
+              <i class="fas fa-trash-restore"></i> Limpar Tudo e Carregar Dados Padrão
+            </button>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><i class="fas fa-user-plus"></i> Adicionar Profissional</div>
+            <div class="form-group">
+              <label>Nome</label>
+              <input type="text" id="new-pessoa-nome" placeholder="Nome completo">
+            </div>
+            <div class="form-group">
+              <label>Cargo / Nível</label>
+              <select id="new-pessoa-cargo">
+                <option value="ceo">CEO</option>
+                <option value="cfo">CFO</option>
+                <option value="coo">COO</option>
+                <option value="sup-financeiro">Superintendente Financeiro</option>
+                <option value="sup-operacional">Superintendente Operacional</option>
+                <option value="ger-administrativo">Gerente Administrativo</option>
+                <option value="ger-engenharia">Gerente de Engenharia</option>
+                <option value="ger-negocios">Gerente de Novos Negócios</option>
+                <option value="ger-ssma">Gerente de Segurança e Meio Ambiente</option>
+                <option value="ger-comercial">Gerente Comercial</option>
+                <option value="ger-logistica">Gerente de Logística</option>
+                <option value="ger-ti">Gerente de TI</option>
+                <option value="ger-manutencao">Gerente de Manutenção</option>
+                <option value="ger-operacao">Gerente de Operação</option>
+                <option value="ger-qualidade">Gerente de Qualidade e Automação</option>
+                <option value="ger-rh">Gerente de RH</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="addPessoa()">
+              <i class="fas fa-plus"></i> Adicionar
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="fas fa-sitemap"></i> Profissionais Cadastrados</div>
+          <div id="pessoas-list" style="max-height:520px;overflow-y:auto">
+            <div class="empty-state">
+              <i class="fas fa-users"></i>
+              <p>Nenhum profissional cadastrado.<br>Adicione ao lado.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OBJETIVOS ESTRATÉGICOS -->
+    <div class="page" id="page-objetivos">
+      <div class="grid-2" style="gap:24px">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-plus"></i> Novo Objetivo Estratégico</div>
+          <div class="form-group">
+            <label>Perspectiva / Pilar</label>
+            <select id="obj-perspectiva">
+              <option>Financeiro</option>
+              <option>Clientes e Mercado</option>
+              <option>Processos Internos</option>
+              <option>Pessoas e Inovação</option>
+              <option>Sustentabilidade</option>
+              <option>Segurança</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Objetivo Estratégico</label>
+            <textarea id="obj-texto" placeholder="Descreva o objetivo estratégico..." rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Indicador Principal</label>
+            <input type="text" id="obj-indicador" placeholder="Ex: EBITDA, NPS, Acidentes...">
+          </div>
+          <button class="btn btn-primary" onclick="addObjetivo()">
+            <i class="fas fa-plus"></i> Adicionar Objetivo
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="fas fa-list"></i> Objetivos Cadastrados</div>
+          <div id="objetivos-list">
+            <div class="empty-state"><i class="fas fa-bullseye"></i><p>Nenhum objetivo cadastrado.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJETOS -->
+    <div class="page" id="page-projetos">
+      <div class="grid-2" style="gap:24px">
+        <div class="card">
+          <div class="card-title"><i class="fas fa-plus"></i> Novo Projeto</div>
+          <div class="form-group">
+            <label>Nome do Projeto</label>
+            <input type="text" id="proj-nome" placeholder="Nome do projeto">
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="proj-status">
+              <option value="aberto">Em Andamento</option>
+              <option value="planejado">Planejado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Áreas Envolvidas</label>
+            <input type="text" id="proj-areas" placeholder="Ex: TI, Operação, Financeiro">
+          </div>
+          <div class="form-group">
+            <label>Breve Descrição</label>
+            <textarea id="proj-desc" placeholder="Descreva o projeto..." rows="3"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="addProjeto()">
+            <i class="fas fa-plus"></i> Adicionar Projeto
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="fas fa-project-diagram"></i> Projetos Cadastrados</div>
+          <div id="projetos-list">
+            <div class="empty-state"><i class="fas fa-project-diagram"></i><p>Nenhum projeto cadastrado.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CEO -->
+    <div class="page" id="page-ceo">
+      <div id="ceo-content">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i>
+          <div>Configure o organograma, objetivos e projetos antes de gerar as metas do CEO.</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-accent btn-lg" onclick="gerarMetasCEO()">
+            <i class="fas fa-robot"></i> Gerar Metas com IA
+          </button>
+          <button class="btn btn-outline btn-lg" onclick="abrirAddMetaManualCEO()">
+            <i class="fas fa-plus-circle"></i> Inserir Manualmente
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIRETORES -->
+    <div class="page" id="page-diretores">
+      <div id="diretores-content">
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div>Valide as metas do CEO antes de cascatear para os Diretores.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUPERINTENDENTES -->
+    <div class="page" id="page-superintendentes">
+      <div id="superintendentes-content">
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div>Valide as metas dos Diretores antes de cascatear para os Superintendentes.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GERENTES -->
+    <div class="page" id="page-gerentes">
+      <div id="gerentes-content">
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div>Valide as metas dos Superintendentes antes de cascatear para os Gerentes.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONSOLIDADO -->
+    <div class="page" id="page-consolidado">
+      <div class="card">
+        <div class="card-title"><i class="fas fa-table"></i> Consolidado de Metas</div>
+        <div id="consolidado-table">
+          <div class="empty-state"><i class="fas fa-table"></i><p>Gere as metas para ver o consolidado.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VALIDAÇÃO -->
+    <div class="page" id="page-validacao">
+      <div id="validacao-content">
+        <div class="empty-state"><i class="fas fa-clipboard-check"></i><p>Gere as metas para validar.</p></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL SMART -->
+<div class="modal-overlay" id="smart-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-magic"></i> Meta Reescrita como SMART</h3>
+      <button class="btn btn-ghost" onclick="closeSmartModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="smart-modal-content"></div>
+  </div>
+</div>
+
+<!-- MODAL ADD META -->
+<div class="modal-overlay" id="add-meta-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-plus"></i> Nova Meta</h3>
+      <button class="btn btn-ghost" onclick="closeAddMetaModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group">
+      <label>Objetivo Estratégico Relacionado</label>
+      <select id="new-meta-obj"></select>
+    </div>
+    <div class="form-group">
+      <label>Descrição da Meta</label>
+      <textarea id="new-meta-texto" placeholder="Descreva a meta..." rows="4"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Peso (%)</label>
+      <input type="number" id="new-meta-peso" value="20" min="1" max="100">
+    </div>
+    <button class="btn btn-primary" onclick="confirmAddMeta()">
+      <i class="fas fa-save"></i> Salvar Meta
+    </button>
+  </div>
+</div>
+
+<script>
+// ===================== ESTADO =====================
+const STORAGE_KEY = 'metaflow_state_v1';
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        ano: parsed.ano ?? 2025,
+        empresa: parsed.empresa ?? 'Minha Empresa S.A.',
+        pessoas: parsed.pessoas ?? [],
+        objetivos: parsed.objetivos ?? [],
+        projetos: parsed.projetos ?? [],
+        metas: parsed.metas ?? {},
+        validados: parsed.validados ?? {},
+        addMetaContext: null,
+        smartContext: null,
+      };
+    }
+  } catch(e) {}
+  return {
+    ano: 2025,
+    empresa: 'Minha Empresa S.A.',
+    pessoas: [],
+    objetivos: [],
+    projetos: [],
+    metas: {},
+    validados: {},
+    addMetaContext: null,
+    smartContext: null,
+  };
+}
+
+function saveState() {
+  try {
+    const toSave = {
+      ano: state.ano,
+      empresa: state.empresa,
+      pessoas: state.pessoas,
+      objetivos: state.objetivos,
+      projetos: state.projetos,
+      metas: state.metas,
+      validados: state.validados,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  } catch(e) {}
+}
+
+const state = loadState();
+
+// Estrutura hierárquica
+const HIERARQUIA = {
+  ceo: { label: 'CEO', nivel: 0, parent: null },
+  cfo: { label: 'CFO', nivel: 1, parent: 'ceo' },
+  coo: { label: 'COO', nivel: 1, parent: 'ceo' },
+  'sup-financeiro': { label: 'Superintendente Financeiro', nivel: 2, parent: 'cfo' },
+  'sup-operacional': { label: 'Superintendente Operacional', nivel: 2, parent: 'coo' },
+  'ger-administrativo': { label: 'Gerente Administrativo', nivel: 3, parent: 'sup-financeiro' },
+  'ger-engenharia': { label: 'Gerente de Engenharia', nivel: 3, parent: 'sup-operacional' },
+  'ger-negocios': { label: 'Gerente de Novos Negócios', nivel: 3, parent: 'sup-operacional' },
+  'ger-ssma': { label: 'Ger. Segurança e Meio Ambiente', nivel: 3, parent: 'sup-operacional' },
+  'ger-comercial': { label: 'Gerente Comercial', nivel: 3, parent: 'sup-operacional' },
+  'ger-logistica': { label: 'Gerente de Logística', nivel: 3, parent: 'sup-operacional' },
+  'ger-ti': { label: 'Gerente de TI', nivel: 3, parent: 'sup-financeiro' },
+  'ger-manutencao': { label: 'Gerente de Manutenção', nivel: 3, parent: 'sup-operacional' },
+  'ger-operacao': { label: 'Gerente de Operação', nivel: 3, parent: 'sup-operacional' },
+  'ger-qualidade': { label: 'Ger. Qualidade e Automação', nivel: 3, parent: 'sup-operacional' },
+  'ger-rh': { label: 'Gerente de RH', nivel: 3, parent: 'sup-financeiro' },
+};
+
+// ===================== NAVEGAÇÃO =====================
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelector(`button[onclick="showPage('${id}')"]`)?.classList.add('active');
+
+  const titles = {
+    dashboard: 'Painel Geral',
+    configuracao: 'Organograma',
+    objetivos: 'Objetivos Estratégicos',
+    projetos: 'Projetos',
+    ceo: 'Metas — CEO',
+    diretores: 'Metas — Diretores',
+    superintendentes: 'Metas — Superintendentes',
+    gerentes: 'Metas — Gerentes',
+    consolidado: 'Consolidado de Metas',
+    validacao: 'Validação',
+  };
+  document.getElementById('page-title').textContent = titles[id] || id;
+
+  
+  if (id === 'dashboard') updateDashboard();
+}
+
+// ===================== ANO =====================
+function updateAno() {
+  state.ano = parseInt(document.getElementById('ano-input').value) || 2025;
+  document.getElementById('ano-display').textContent = state.ano;
+  saveState();
+}
+
+// ===================== PESSOAS =====================
+function addPessoa() {
+  const nome = document.getElementById('new-pessoa-nome').value.trim();
+  const cargo = document.getElementById('new-pessoa-cargo').value;
+  if (!nome) return alert('Informe o nome do profissional.');
+  const id = 'p_' + Date.now();
+  state.pessoas.push({ id, nome, cargo });
+  state.metas[id] = [];
+  document.getElementById('new-pessoa-nome').value = '';
+  saveState();
+  renderPessoas();
+  updateDashboard();
+}
+
+function removePessoa(id) {
+  if (!confirm('Remover profissional e todas as suas metas?')) return;
+  state.pessoas = state.pessoas.filter(p => p.id !== id);
+  delete state.metas[id];
+  delete state.validados[id];
+  saveState();
+  renderPessoas();
+  updateDashboard();
+}
+
+function renderPessoas() {
+  const el = document.getElementById('pessoas-list');
+  if (!state.pessoas.length) {
+    el.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>Nenhum profissional cadastrado.</p></div>';
+    return;
+  }
+  const grupos = {};
+  state.pessoas.forEach(p => {
+    const nivel = HIERARQUIA[p.cargo]?.nivel ?? 99;
+    if (!grupos[nivel]) grupos[nivel] = [];
+    grupos[nivel].push(p);
+  });
+
+  const levelNames = ['CEO', 'Diretores', 'Superintendentes', 'Gerentes'];
+  let html = '';
+  Object.keys(grupos).sort().forEach(nivel => {
+    html += `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin:12px 0 6px">${levelNames[nivel] || 'Outros'}</div>`;
+    grupos[nivel].forEach(p => {
+      const initials = p.nome.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+      html += `
+        <div class="pessoa-card">
+          <div class="avatar">${initials}</div>
+          <div class="pessoa-info">
+            <div class="pessoa-name">${p.nome}</div>
+            <div class="pessoa-role">${HIERARQUIA[p.cargo]?.label || p.cargo}</div>
+          </div>
+          <button class="btn btn-danger-ghost btn-sm" onclick="removePessoa('${p.id}')"><i class="fas fa-trash"></i></button>
+        </div>`;
+    });
+  });
+  el.innerHTML = html;
+}
+
+// ===================== OBJETIVOS =====================
+function addObjetivo() {
+  const texto = document.getElementById('obj-texto').value.trim();
+  const perspectiva = document.getElementById('obj-perspectiva').value;
+  const indicador = document.getElementById('obj-indicador').value.trim();
+  if (!texto) return alert('Informe o objetivo estratégico.');
+  const id = 'o_' + Date.now();
+  state.objetivos.push({ id, texto, perspectiva, indicador });
+  document.getElementById('obj-texto').value = '';
+  document.getElementById('obj-indicador').value = '';
+  saveState();
+  renderObjetivos();
+  updateDashboard();
+}
+
+function removeObjetivo(id) {
+  state.objetivos = state.objetivos.filter(o => o.id !== id);
+  saveState();
+  renderObjetivos();
+  updateDashboard();
+}
+
+function renderObjetivos() {
+  const el = document.getElementById('objetivos-list');
+  if (!state.objetivos.length) {
+    el.innerHTML = '<div class="empty-state"><i class="fas fa-bullseye"></i><p>Nenhum objetivo cadastrado.</p></div>';
+    return;
+  }
+  const colors = { 'Financeiro': 'badge-green', 'Clientes e Mercado': 'badge-blue', 'Processos Internos': 'badge-gray', 'Pessoas e Inovação': 'badge-amber', 'Sustentabilidade': 'badge-green', 'Segurança': 'badge-red' };
+  let html = '';
+  state.objetivos.forEach((o, i) => {
+    html += `
+      <div class="meta-card" style="margin-bottom:10px">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div class="meta-idx">${i+1}</div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <span class="badge ${colors[o.perspectiva] || 'badge-gray'}">${o.perspectiva}</span>
+              ${o.indicador ? `<span class="text-muted"><i class="fas fa-chart-line"></i> ${o.indicador}</span>` : ''}
+            </div>
+            <div style="font-size:13px;line-height:1.5">${o.texto}</div>
+          </div>
+          <button class="btn btn-danger-ghost btn-sm" onclick="removeObjetivo('${o.id}')"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>`;
+  });
+  el.innerHTML = html;
+}
+
+// ===================== PROJETOS =====================
+function addProjeto() {
+  const nome = document.getElementById('proj-nome').value.trim();
+  const status = document.getElementById('proj-status').value;
+  const areas = document.getElementById('proj-areas').value.trim();
+  const desc = document.getElementById('proj-desc').value.trim();
+  if (!nome) return alert('Informe o nome do projeto.');
+  const id = 'pr_' + Date.now();
+  state.projetos.push({ id, nome, status, areas, desc });
+  document.getElementById('proj-nome').value = '';
+  document.getElementById('proj-areas').value = '';
+  document.getElementById('proj-desc').value = '';
+  saveState();
+  renderProjetos();
+}
+
+function removeProjeto(id) {
+  state.projetos = state.projetos.filter(p => p.id !== id);
+  saveState();
+  renderProjetos();
+}
+
+function renderProjetos() {
+  const el = document.getElementById('projetos-list');
+  if (!state.projetos.length) {
+    el.innerHTML = '<div class="empty-state"><i class="fas fa-project-diagram"></i><p>Nenhum projeto cadastrado.</p></div>';
+    return;
+  }
+  let html = '';
+  state.projetos.forEach(p => {
+    const badge = p.status === 'aberto' ? 'badge-blue' : 'badge-amber';
+    const label = p.status === 'aberto' ? 'Em Andamento' : 'Planejado';
+    html += `
+      <div class="meta-card">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <span style="font-size:13px;font-weight:500">${p.nome}</span>
+              <span class="badge ${badge}">${label}</span>
+            </div>
+            ${p.areas ? `<div class="text-muted"><i class="fas fa-users"></i> ${p.areas}</div>` : ''}
+            ${p.desc ? `<div style="font-size:12px;color:var(--text3);margin-top:4px">${p.desc}</div>` : ''}
+          </div>
+          <button class="btn btn-danger-ghost btn-sm" onclick="removeProjeto('${p.id}')"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>`;
+  });
+  el.innerHTML = html;
+}
+
+// ===================== API KEY =====================
+function saveApiKey(val) {
+  const key = val.trim();
+  localStorage.setItem('metaflow_apikey', key);
+  const status = document.getElementById('apikey-status');
+  if (key.startsWith('sk-ant-')) {
+    status.textContent = '✓ Chave válida — IA ativada';
+    status.style.color = '#5dcaa5';
+  } else if (key.length > 5) {
+    status.textContent = '⚠ Formato inválido (deve começar com sk-ant-)';
+    status.style.color = '#f5c85a';
+  } else {
+    status.textContent = 'Cole sua chave para ativar a IA';
+    status.style.color = 'rgba(255,255,255,0.5)';
+  }
+}
+
+function getApiKey() {
+  return localStorage.getItem('metaflow_apikey') || '';
+}
+
+// ===================== API IA =====================
+async function callAI(prompt, systemPrompt = '') {
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error('API Key não configurada. Cole sua chave Anthropic no topo da página.');
+
+  const messages = [{ role: 'user', content: prompt }];
+  const body = {
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 2000,
+    messages,
+  };
+  if (systemPrompt) body.system = systemPrompt;
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const errText = await resp.text();
+    throw new Error('API error ' + resp.status + ': ' + errText);
+  }
+  const data = await resp.json();
+  return data.content?.map(c => c.text || '').join('') || '';
+}
+
+// ===================== GERAR METAS CEO =====================
+async function gerarMetasCEO() {
+  if (!state.objetivos.length) return alert('Cadastre pelo menos 1 objetivo estratégico antes.');
+
+  const pessoasCEO = state.pessoas.filter(p => p.cargo === 'ceo');
+  let pessoaId;
+  if (!pessoasCEO.length) {
+    // Cria CEO padrão
+    const id = 'p_ceo_default';
+    const ceo = { id, nome: 'CEO', cargo: 'ceo' };
+    state.pessoas.push(ceo);
+    state.metas[id] = [];
+    pessoaId = id;
+  } else {
+    pessoaId = pessoasCEO[0].id;
+  }
+
+  const el = document.getElementById('ceo-content');
+  el.innerHTML = `
+    <div class="ai-thinking"><i class="fas fa-circle-notch fa-spin"></i> A IA está analisando os objetivos estratégicos e projetos para criar as metas do CEO...</div>
+    <div class="loading-bar" style="margin-top:8px"></div>`;
+
+  const objsText = state.objetivos.map((o, i) => `${i+1}. [${o.perspectiva}] ${o.texto}${o.indicador ? ' (Indicador: '+o.indicador+')' : ''}`).join('\n');
+  const projsText = state.projetos.length ? state.projetos.map(p => `- ${p.nome} (${p.status === 'aberto' ? 'Em Andamento' : 'Planejado'}): ${p.desc}`).join('\n') : 'Nenhum projeto cadastrado.';
+
+  const prompt = `Você é um especialista em planejamento estratégico e gestão por objetivos (OKR/BSC).
+
+Com base nos seguintes objetivos estratégicos e projetos da empresa para ${state.ano}:
+
+OBJETIVOS ESTRATÉGICOS:
+${objsText}
+
+PROJETOS:
+${projsText}
+
+Crie EXATAMENTE 5 metas de alto nível para o CEO. Cada meta deve:
+1. Ser derivada de um objetivo estratégico específico
+2. Ser mensurável e ter prazo (até dez/${state.ano})
+3. Ser desafiadora mas alcançável
+4. Ser de responsabilidade do CEO
+5. Ter um formato claro com verbo de ação, indicador e meta quantitativa
+
+Responda APENAS em JSON, sem texto adicional:
+{
+  "metas": [
+    {
+      "obj_index": 1,
+      "texto": "descrição completa da meta",
+      "peso_sugerido": 20
+    }
+  ]
+}`;
+
+  try {
+    const resp = await callAI(prompt);
+    const clean = resp.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    // Keep pinned metas, replace the rest
+    const pinnedMetas = (state.metas[pessoaId] || []).filter(m => m.pinned);
+    const newMetas = parsed.metas.map((m, i) => ({
+      id: 'meta_' + Date.now() + '_' + i,
+      texto: m.texto,
+      peso: m.peso_sugerido || 20,
+      objId: state.objetivos[m.obj_index - 1]?.id || state.objetivos[0]?.id,
+      smart: null,
+    }));
+    state.metas[pessoaId] = [...pinnedMetas, ...newMetas];
+    saveState();
+    renderPageCEO(pessoaId);
+  } catch(e) {
+    console.error('CEO metas error:', e);
+    el.innerHTML = `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Erro ao gerar metas: ${e.message || e}</div>
+    <button class="btn btn-accent btn-lg" onclick="gerarMetasCEO()"><i class="fas fa-redo"></i> Tentar Novamente</button>`;
+  }
+  updateDashboard();
+}
+
+// ===================== RENDER METAS GENÉRICO =====================
+function renderMetasSection(pessoaId, containerId, nivel) {
+  const pessoa = state.pessoas.find(p => p.id === pessoaId);
+  const metas = state.metas[pessoaId] || [];
+  const validado = state.validados[pessoaId];
+  const totalPeso = metas.reduce((s, m) => s + (parseFloat(m.peso) || 0), 0);
+  const pesoOk = Math.abs(totalPeso - 100) < 0.5;
+
+  const hierarchyInfo = HIERARQUIA[pessoa?.cargo || ''];
+
+  let html = `
+    <div class="cascata-section">
+      <div class="cascata-level">Nível ${nivel}</div>
+      <div class="cascata-title">${pessoa?.nome || 'Profissional'}</div>
+      <div class="cascata-sub">${hierarchyInfo?.label || pessoa?.cargo || ''}</div>
+    </div>`;
+
+  if (validado) {
+    html += `<div class="badge badge-green" style="margin-bottom:12px"><i class="fas fa-check"></i> Metas Validadas</div>`;
+  }
+
+  html += `<div class="metas-container" id="metas-list-${pessoaId}">`;
+
+  metas.forEach((meta, idx) => {
+    const obj = state.objetivos.find(o => o.id === meta.objId);
+    html += renderMetaCard(meta, idx, pessoaId);
+  });
+
+  html += `</div>`;
+
+  // Total peso
+  html += `
+    <div class="peso-total-bar ${pesoOk ? 'peso-ok' : 'peso-err'}" style="margin-top:12px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:13px;font-weight:500">Total de Pesos: ${totalPeso.toFixed(0)}%</span>
+        ${pesoOk ? '<span><i class="fas fa-check"></i> Correto</span>' : `<span><i class="fas fa-exclamation-triangle"></i> Deve somar 100%</span>`}
+      </div>
+    </div>`;
+
+  // Botões
+  html += `
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px">
+      <button class="btn btn-outline" onclick="openAddMeta('${pessoaId}')">
+        <i class="fas fa-plus"></i> Adicionar Meta
+      </button>`;
+
+  if (!validado && metas.length > 0) {
+    html += `<button class="btn btn-outline" onclick="gerarTodasFaixasIA('${pessoaId}')">
+        <i class="fas fa-robot"></i> Gerar Faixas de Todas as Metas
+      </button>
+      <button class="btn btn-danger-ghost" style="border:1px solid var(--danger)" onclick="abrirApagarNivel('${pessoaId}')">
+        <i class="fas fa-trash-alt"></i> Apagar Todas as Metas
+      </button>`;
+  }
+
+  if (!validado && pesoOk) {
+    html += `<button class="btn btn-success" onclick="validarMetas('${pessoaId}')">
+        <i class="fas fa-check-double"></i> Validar e Cascatear
+      </button>`;
+  }
+
+  if (validado) {
+    html += `<button class="btn btn-outline" onclick="desvalidarMetas('${pessoaId}')">
+        <i class="fas fa-undo"></i> Reabrir para Edição
+      </button>`;
+  }
+
+  html += `</div>`;
+
+  return html;
+}
+
+function renderMetaCard(meta, idx, pessoaId) {
+  const obj = state.objetivos.find(o => o.id === meta.objId);
+  const validado = state.validados[pessoaId];
+  const disabled = validado ? 'disabled' : '';
+  const isPinned = !!meta.pinned;
+  const faixas = meta.faixas || {};
+  const hasFaixas = faixas[0] || faixas[50] || faixas[75] || faixas[100];
+
+  const faixasDefs = [
+    { pct: 0,   cls: 'faixa-0',   label: 'Não Atingido' },
+    { pct: 50,  cls: 'faixa-50',  label: 'Parcial' },
+    { pct: 75,  cls: 'faixa-75',  label: 'Quase Atingido' },
+    { pct: 100, cls: 'faixa-100', label: 'Atingido' },
+  ];
+
+  const faixasHtml = `
+    <div class="faixas-section" id="faixas-sec-${meta.id}">
+      <div class="faixas-header" onclick="toggleFaixas('${meta.id}')">
+        <span class="faixas-label">
+          <i class="fas fa-chart-bar"></i> Faixas de Resultado
+          ${hasFaixas ? '<span style="color:var(--success);font-size:10px">✓ preenchido</span>' : '<span style="color:var(--text3);font-size:10px">clique para expandir</span>'}
+        </span>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${!validado ? `<button class="btn btn-outline faixas-ai-btn" title="Gerar faixas com IA"
+            onclick="event.stopPropagation();gerarFaixasIA('${pessoaId}','${meta.id}')">
+            <i class="fas fa-robot"></i> Gerar com IA
+          </button>` : ''}
+          <i class="fas fa-chevron-down" id="faixas-chev-${meta.id}" style="font-size:11px;color:var(--text3);transition:transform .2s"></i>
+        </div>
+      </div>
+      <div id="faixas-body-${meta.id}" style="display:${hasFaixas?'block':'none'}">
+        <div id="faixas-ai-status-${meta.id}"></div>
+        <div class="faixas-grid">
+          ${faixasDefs.map(f => `
+            <div class="faixa-item ${f.cls}">
+              ${!validado ? `<button class="faixa-edit-btn" title="Editar" onclick="toggleFaixaEdit('${meta.id}',${f.pct})"><i class="fas fa-pencil-alt"></i></button>` : ''}
+              <div class="faixa-pct">${f.pct}%</div>
+              <div class="faixa-sublabel">${f.label}</div>
+              <div class="faixa-desc" id="fdesc-${meta.id}-${f.pct}">${faixas[f.pct] || '<em style="opacity:.4">Não definido</em>'}</div>
+              <textarea class="faixa-desc-edit" id="fedit-${meta.id}-${f.pct}"
+                placeholder="Descreva o critério para ${f.pct}%..."
+                onchange="updateFaixa('${pessoaId}','${meta.id}',${f.pct},this.value)"
+                >${faixas[f.pct] || ''}</textarea>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+
+  return `
+    <div class="meta-card ${isPinned ? 'pinned' : ''}" id="card-${meta.id}">
+      <div class="meta-card-header">
+        <div class="meta-idx">${idx + 1}</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+            ${meta.manual ? `<span class="pinned-badge" style="background:#e0f0ff;color:#1a5fa8;border-color:#90c8f8"><i class="fas fa-pen"></i> Manual</span>` : (isPinned ? `<span class="pinned-badge"><i class="fas fa-thumbtack"></i> Fixada</span>` : '')}
+            ${meta.derivadaDe ? `<span style="font-size:10px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:1px 5px">↳ Derivada</span>` : ''}
+          </div>
+          <div class="meta-text-view" id="view-${meta.id}" style="font-size:13px;line-height:1.5;margin-bottom:6px">${meta.texto}</div>
+          <textarea class="meta-text-edit" id="edit-${meta.id}" style="width:100%;font-size:13px;margin-bottom:6px" rows="3">${meta.texto}</textarea>
+          ${obj ? `<span class="meta-obj-tag"><i class="fas fa-link"></i> ${obj.perspectiva}: ${obj.texto.substring(0,50)}...</span>` : ''}
+        </div>
+        ${!validado ? `
+        <div class="meta-actions">
+          <button class="btn btn-ghost btn-sm" title="Replicar para outra pessoa" onclick="abrirReplicar('${pessoaId}','${meta.id}')"><i class="fas fa-copy"></i></button>
+          <button class="btn btn-ghost btn-sm" title="Derivar para outra pessoa (fixada)" onclick="abrirDerivar('${pessoaId}','${meta.id}')"><i class="fas fa-code-branch"></i></button>
+          <button class="btn btn-ghost btn-sm" title="Editar" onclick="toggleEditMeta('${meta.id}', '${pessoaId}')"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-danger-ghost btn-sm" title="Excluir" onclick="deleteMeta('${pessoaId}', '${meta.id}')"><i class="fas fa-trash"></i></button>
+        </div>` : `
+        <div class="meta-actions">
+          <button class="btn btn-ghost btn-sm" title="Replicar" onclick="abrirReplicar('${pessoaId}','${meta.id}')"><i class="fas fa-copy"></i></button>
+          <button class="btn btn-ghost btn-sm" title="Derivar" onclick="abrirDerivar('${pessoaId}','${meta.id}')"><i class="fas fa-code-branch"></i></button>
+        </div>`}
+      </div>
+      <div class="meta-footer">
+        <div class="peso-input">
+          <label style="margin:0;white-space:nowrap">Peso:</label>
+          <input type="number" value="${meta.peso}" min="1" max="100" style="width:60px" ${disabled}
+            onchange="updatePeso('${pessoaId}', '${meta.id}', this.value)">
+          <span class="peso-display">%</span>
+        </div>
+        <div style="flex:1"></div>
+        <button class="btn btn-outline btn-sm" onclick="avaliarSMART('${pessoaId}', '${meta.id}')">
+          <i class="fas fa-magic"></i> Avaliar SMART
+        </button>
+        ${meta.smart ? renderSmartBadge(meta.smart) : ''}
+      </div>
+      ${faixasHtml}
+    </div>`;
+}
+
+function renderSmartBadge(smart) {
+  const letters = ['S', 'M', 'A', 'R', 'T'];
+  return `<div class="smart-score">` +
+    letters.map(l => `<div class="smart-letter ${smart[l] ? '' : 'off'}">${l}</div>`).join('') +
+    `</div>`;
+}
+
+// ===================== CEO PAGE =====================
+function renderPageCEO(pessoaId) {
+  const el = document.getElementById('ceo-content');
+  const pessoa = state.pessoas.find(p => p.id === pessoaId);
+
+  el.innerHTML = renderMetasSection(pessoaId, 'ceo-content', 0);
+
+  el.innerHTML += `
+    <div class="divider"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+      <button class="btn btn-ghost" onclick="gerarMetasCEO()">
+        <i class="fas fa-redo"></i> Regenerar Metas com IA
+      </button>
+      <button class="btn btn-outline" onclick="abrirAddMetaManual('${pessoaId}')">
+        <i class="fas fa-plus-circle"></i> Inserir Meta Manualmente
+      </button>
+    </div>`;
+}
+
+// ===================== DIRETORES PAGE =====================
+async function renderPageDiretores() {
+  const el = document.getElementById('diretores-content');
+
+  // Verifica se CEO está validado
+  const pessoasCEO = state.pessoas.filter(p => p.cargo === 'ceo');
+  const ceoValidado = pessoasCEO.some(p => state.validados[p.id]);
+
+  if (!ceoValidado) {
+    el.innerHTML = `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Valide as metas do CEO antes de cascatear para os Diretores.</div>`;
+    return;
+  }
+
+  const diretores = state.pessoas.filter(p => p.cargo === 'cfo' || p.cargo === 'coo');
+
+  if (!diretores.length) {
+    el.innerHTML = `<div class="alert alert-info"><i class="fas fa-info-circle"></i> Nenhum diretor cadastrado. Vá em <b>Organograma</b> e adicione CFO e COO.</div>`;
+    return;
+  }
+
+  let html = '';
+  for (const dir of diretores) {
+    if (!state.metas[dir.id] || !state.metas[dir.id].length) {
+      html += `<div style="margin-bottom:24px">
+        <div class="cascata-section">
+          <div class="cascata-level">Nível 1</div>
+          <div class="cascata-title">${dir.nome}</div>
+          <div class="cascata-sub">${HIERARQUIA[dir.cargo]?.label}</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-accent" onclick="gerarMetasCascata('${dir.id}', 1)">
+            <i class="fas fa-robot"></i> Gerar Metas com IA
+          </button>
+          <button class="btn btn-outline" onclick="abrirAddMetaManual('${dir.id}')">
+            <i class="fas fa-plus-circle"></i> Inserir Manualmente
+          </button>
+        </div>
+        <div id="loading-${dir.id}"></div>
+      </div>`;
+    } else {
+      html += `<div style="margin-bottom:32px">` + renderMetasSection(dir.id, null, 1) + `</div>`;
+    }
+  }
+  el.innerHTML = html;
+}
+
+// ===================== SUPERINTENDENTES PAGE =====================
+async function renderPageSuperintendentes() {
+  const el = document.getElementById('superintendentes-content');
+
+  const diretores = state.pessoas.filter(p => p.cargo === 'cfo' || p.cargo === 'coo');
+  const dirsValidados = diretores.length > 0 && diretores.every(p => state.validados[p.id]);
+
+  if (!dirsValidados) {
+    el.innerHTML = `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Valide as metas de <strong>todos os Diretores</strong> (CFO e COO) antes de liberar os Superintendentes.</div>`;
+    return;
+  }
+
+  const sups = state.pessoas.filter(p => p.cargo === 'sup-financeiro' || p.cargo === 'sup-operacional');
+
+  if (!sups.length) {
+    el.innerHTML = `<div class="alert alert-info"><i class="fas fa-info-circle"></i> Nenhum Superintendente cadastrado.</div>`;
+    return;
+  }
+
+  let html = '';
+  for (const sup of sups) {
+    if (!state.metas[sup.id] || !state.metas[sup.id].length) {
+      html += `<div style="margin-bottom:24px">
+        <div class="cascata-section">
+          <div class="cascata-level">Nível 2</div>
+          <div class="cascata-title">${sup.nome}</div>
+          <div class="cascata-sub">${HIERARQUIA[sup.cargo]?.label}</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-accent" onclick="gerarMetasCascata('${sup.id}', 2)">
+            <i class="fas fa-robot"></i> Gerar Metas com IA
+          </button>
+          <button class="btn btn-outline" onclick="abrirAddMetaManual('${sup.id}')">
+            <i class="fas fa-plus-circle"></i> Inserir Manualmente
+          </button>
+        </div>
+        <div id="loading-${sup.id}"></div>
+      </div>`;
+    } else {
+      html += `<div style="margin-bottom:32px">` + renderMetasSection(sup.id, null, 2) + `</div>`;
+    }
+  }
+  el.innerHTML = html;
+}
+
+// ===================== GERENTES PAGE =====================
+async function renderPageGerentes() {
+  const el = document.getElementById('gerentes-content');
+
+  const sups = state.pessoas.filter(p => p.cargo === 'sup-financeiro' || p.cargo === 'sup-operacional');
+  const supsValidados = sups.every(p => state.validados[p.id]);
+
+  if (!sups.length || !supsValidados) {
+    el.innerHTML = `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Valide as metas dos Superintendentes antes de cascatear.</div>`;
+    return;
+  }
+
+  const gerentes = state.pessoas.filter(p => HIERARQUIA[p.cargo]?.nivel === 3);
+
+  if (!gerentes.length) {
+    el.innerHTML = `<div class="alert alert-info"><i class="fas fa-info-circle"></i> Nenhum gerente cadastrado.</div>`;
+    return;
+  }
+
+  let html = '';
+  for (const ger of gerentes) {
+    if (!state.metas[ger.id] || !state.metas[ger.id].length) {
+      html += `<div style="margin-bottom:24px">
+        <div class="cascata-section">
+          <div class="cascata-level">Nível 3</div>
+          <div class="cascata-title">${ger.nome}</div>
+          <div class="cascata-sub">${HIERARQUIA[ger.cargo]?.label}</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-accent" onclick="gerarMetasCascata('${ger.id}', 3)">
+            <i class="fas fa-robot"></i> Gerar Metas com IA
+          </button>
+          <button class="btn btn-outline" onclick="abrirAddMetaManual('${ger.id}')">
+            <i class="fas fa-plus-circle"></i> Inserir Manualmente
+          </button>
+        </div>
+        <div id="loading-${ger.id}"></div>
+      </div>`;
+    } else {
+      html += `<div style="margin-bottom:32px">` + renderMetasSection(ger.id, null, 3) + `</div>`;
+    }
+  }
+  el.innerHTML = html;
+}
+
+// ===================== GERAR METAS CASCATA =====================
+async function gerarMetasCascata(pessoaId, nivel) {
+  const pessoa = state.pessoas.find(p => p.id === pessoaId);
+  const loadingEl = document.getElementById(`loading-${pessoaId}`);
+  if (loadingEl) {
+    loadingEl.innerHTML = `<div class="ai-thinking" style="margin-top:10px"><i class="fas fa-circle-notch fa-spin"></i> Gerando metas com IA para ${pessoa.nome}...</div><div class="loading-bar" style="margin-top:8px"></div>`;
+  }
+
+  // Metas do superior
+  const parentCargo = HIERARQUIA[pessoa.cargo]?.parent;
+  const parentPessoa = state.pessoas.find(p => p.cargo === parentCargo);
+  const parentMetas = parentPessoa ? (state.metas[parentPessoa.id] || []) : [];
+  const parentMetasText = parentMetas.map((m, i) => `${i+1}. ${m.texto}`).join('\n') || 'Não disponível';
+
+  const objsText = state.objetivos.map((o, i) => `${i+1}. [${o.perspectiva}] ${o.texto}`).join('\n');
+  const cargoLabel = HIERARQUIA[pessoa.cargo]?.label || pessoa.cargo;
+
+  const prompt = `Você é especialista em desdobramento de metas (cascateamento estratégico).
+
+Cargo: ${cargoLabel}
+Profissional: ${pessoa.nome}
+Ano: ${state.ano}
+
+OBJETIVOS ESTRATÉGICOS DA EMPRESA:
+${objsText}
+
+METAS DO SUPERIOR (${parentPessoa?.nome || 'superior'}):
+${parentMetasText}
+
+Crie EXATAMENTE 5 metas NOVAS (não repita as que já existem abaixo) para este cargo/área, derivadas dos objetivos estratégicos e alinhadas com as metas do superior.
+As metas devem ser adequadas ao nível e responsabilidades do ${cargoLabel}.
+Cada meta deve ter um verbo de ação, indicador e meta quantitativa.
+
+METAS JÁ FIXADAS (não repetir, mas complementar):
+${(state.metas[pessoaId]||[]).filter(m=>m.pinned).map((m,i)=>`${i+1}. ${m.texto}`).join('\n') || 'Nenhuma'}
+
+Responda APENAS em JSON:
+{
+  "metas": [
+    {
+      "obj_index": 1,
+      "texto": "meta completa aqui",
+      "peso_sugerido": 20
+    }
+  ]
+}`;
+
+  try {
+    const resp = await callAI(prompt);
+    const clean = resp.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    // Keep pinned metas, replace the rest
+    const pinnedMetas = (state.metas[pessoaId] || []).filter(m => m.pinned);
+    const newMetas = parsed.metas.map((m, i) => ({
+      id: 'meta_' + Date.now() + '_' + i,
+      texto: m.texto,
+      peso: m.peso_sugerido || 20,
+      objId: state.objetivos[m.obj_index - 1]?.id || state.objetivos[0]?.id,
+      smart: null,
+    }));
+    state.metas[pessoaId] = [...pinnedMetas, ...newMetas];
+
+    saveState();
+    // Re-render the correct page
+    if (nivel === 1) renderPageDiretores();
+    else if (nivel === 2) renderPageSuperintendentes();
+    else renderPageGerentes();
+    updateDashboard();
+  } catch(e) {
+    console.error('Cascata error:', e);
+    if (loadingEl) loadingEl.innerHTML = `<div class="alert alert-warning" style="margin-top:10px"><i class="fas fa-exclamation-triangle"></i> Erro: ${e.message || e} <button class="btn btn-outline btn-sm" onclick="gerarMetasCascata('${pessoaId}', ${nivel})">Tentar novamente</button></div>`;
+  }
+}
+
+// ===================== EDIÇÃO DE METAS =====================
+function toggleEditMeta(metaId, pessoaId) {
+  const view = document.getElementById('view-' + metaId);
+  const edit = document.getElementById('edit-' + metaId);
+  if (edit.classList.contains('show')) {
+    // Save
+    const novoTexto = edit.value.trim();
+    const meta = state.metas[pessoaId]?.find(m => m.id === metaId);
+    if (meta && novoTexto) {
+      meta.texto = novoTexto;
+      view.textContent = novoTexto;
+    }
+    saveState();
+    edit.classList.remove('show');
+    view.classList.remove('hide');
+  } else {
+    edit.classList.add('show');
+    view.classList.add('hide');
+    edit.focus();
+  }
+}
+
+function deleteMeta(pessoaId, metaId) {
+  const meta = state.metas[pessoaId]?.find(m => m.id === metaId);
+  if (meta?.manual) {
+    if (!confirm('Esta é uma meta inserida manualmente (fixada).\nTem certeza que deseja excluí-la?')) return;
+  } else if (meta?.pinned) {
+    if (!confirm('Esta é uma meta fixada/derivada.\nTem certeza que deseja excluí-la?')) return;
+  } else {
+    if (!confirm('Excluir esta meta?')) return;
+  }
+  state.metas[pessoaId] = state.metas[pessoaId].filter(m => m.id !== metaId);
+  saveState();
+  document.getElementById('card-' + metaId)?.remove();
+  updatePesoTotal(pessoaId);
+  updateDashboard();
+}
+
+function updatePeso(pessoaId, metaId, valor) {
+  const meta = state.metas[pessoaId]?.find(m => m.id === metaId);
+  if (meta) meta.peso = parseFloat(valor) || 0;
+  saveState();
+  updatePesoTotal(pessoaId);
+}
+
+function updatePesoTotal(pessoaId) {
+  const metas = state.metas[pessoaId] || [];
+  const total = metas.reduce((s, m) => s + (parseFloat(m.peso) || 0), 0);
+  const pesoEl = document.querySelector(`#page-${getCurrentNivelPage(pessoaId)} .peso-total-bar`);
+  // Simpler: just refresh
+}
+
+function getCurrentNivelPage(pessoaId) {
+  const pessoa = state.pessoas.find(p => p.id === pessoaId);
+  const nivel = HIERARQUIA[pessoa?.cargo]?.nivel ?? 0;
+  return ['ceo', 'diretores', 'superintendentes', 'gerentes'][nivel];
+}
+
+// ===================== VALIDAÇÃO =====================
+function validarMetas(pessoaId) {
+  const metas = state.metas[pessoaId] || [];
+  const total = metas.reduce((s, m) => s + (parseFloat(m.peso) || 0), 0);
+  if (Math.abs(total - 100) > 0.5) {
+    alert('Os pesos devem somar 100% para validar. Total atual: ' + total.toFixed(1) + '%');
+    return;
+  }
+
+  // Save any open edits
+  metas.forEach(m => {
+    const edit = document.getElementById('edit-' + m.id);
+    if (edit && edit.classList.contains('show')) {
+      m.texto = edit.value.trim() || m.texto;
+    }
+  });
+
+  state.validados[pessoaId] = true;
+
+  const pessoa = state.pessoas.find(p => p.id === pessoaId);
+  const nivel = HIERARQUIA[pessoa?.cargo]?.nivel ?? 0;
+  saveState();
+
+  if (nivel === 0) renderPageCEO(pessoaId);
+  else if (nivel === 1) renderPageDiretores();
+  else if (nivel === 2) renderPageSuperintendentes();
+  else renderPageGerentes();
+
+  updateDashboard();
+  alert('✅ Metas validadas! O cascateamento para o próximo nível está liberado.');
+}
+
+function desvalidarMetas(pessoaId) {
+  state.validados[pessoaId] = false;
+  saveState();
+  const pessoa = state.pessoas.find(p => p.id === pessoaId);
+  const nivel = HIERARQUIA[pessoa?.cargo]?.nivel ?? 0;
+  if (nivel === 0) renderPageCEO(pessoaId);
+  else if (nivel === 1) renderPageDiretores();
+  else if (nivel === 2) renderPageSuperintendentes();
+  else renderPageGerentes();
+  updateDashboard();
+}
+
+// ===================== ADICIONAR META =====================
+function openAddMeta(pessoaId) {
+  state.addMetaContext = { pessoaId };
+  const select = document.getElementById('new-meta-obj');
+  select.innerHTML = state.objetivos.map(o => `<option value="${o.id}">[${o.perspectiva}] ${o.texto.substring(0,60)}...</option>`).join('');
+  document.getElementById('new-meta-texto').value = '';
+  document.getElementById('new-meta-peso').value = '20';
+  document.getElementById('add-meta-modal').classList.add('show');
+}
+
+function closeAddMetaModal() {
+  document.getElementById('add-meta-modal').classList.remove('show');
+}
+
+function confirmAddMeta() {
+  const { pessoaId } = state.addMetaContext;
+  const texto = document.getElementById('new-meta-texto').value.trim();
+  const peso = parseFloat(document.getElementById('new-meta-peso').value) || 20;
+  const objId = document.getElementById('new-meta-obj').value;
+  if (!texto) return alert('Informe a descrição da meta.');
+
+  const meta = {
+    id: 'meta_' + Date.now(),
+    texto, peso, objId, smart: null,
+  };
+  state.metas[pessoaId] = state.metas[pessoaId] || [];
+  state.metas[pessoaId].push(meta);
+  saveState();
+  closeAddMetaModal();
+
+  // Re-render current page
+  const pessoa = state.pessoas.find(p => p.id === pessoaId);
+  const nivel = HIERARQUIA[pessoa?.cargo]?.nivel ?? 0;
+  if (nivel === 0) renderPageCEO(pessoaId);
+  else if (nivel === 1) renderPageDiretores();
+  else if (nivel === 2) renderPageSuperintendentes();
+  else renderPageGerentes();
+  updateDashboard();
+}
+
+// ===================== AVALIAR SMART =====================
+async function avaliarSMART(pessoaId, metaId) {
+  const meta = state.metas[pessoaId]?.find(m => m.id === metaId);
+  if (!meta) return;
+
+  const modal = document.getElementById('smart-modal');
+  const content = document.getElementById('smart-modal-content');
+  modal.classList.add('show');
+  content.innerHTML = `<div class="ai-thinking"><i class="fas fa-circle-notch fa-spin"></i> Analisando e reescrevendo a meta como SMART...</div><div class="loading-bar" style="margin-top:8px"></div>`;
+
+  const obj = state.objetivos.find(o => o.id === meta.objId);
+  const prompt = `Você é especialista em metodologia SMART para definição de metas corporativas.
+
+Meta atual: "${meta.texto}"
+Objetivo estratégico relacionado: "${obj?.texto || 'Não informado'}"
+Cargo do responsável: "${HIERARQUIA[state.pessoas.find(p => p.id === pessoaId)?.cargo]?.label || ''}"
+
+Analise se a meta é SMART (Específica, Mensurável, Atingível, Relevante, Temporal) e reescreva-a de forma SMART completa.
+
+Responda APENAS em JSON:
+{
+  "analise": {
+    "S": true/false,
+    "M": true/false,
+    "A": true/false,
+    "R": true/false,
+    "T": true/false,
+    "comentarios": "breve análise de pontos fortes e fracos"
+  },
+  "meta_smart": "meta reescrita de forma SMART completa e profissional"
+}`;
+
+  try {
+    const resp = await callAI(prompt);
+    const clean = resp.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    const letters = ['S', 'M', 'A', 'R', 'T'];
+    const labels = { S: 'Específica', M: 'Mensurável', A: 'Atingível', R: 'Relevante', T: 'Temporal' };
+
+    content.innerHTML = `
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px">META ORIGINAL</div>
+        <div style="font-size:13px;padding:12px;background:var(--surface2);border-radius:6px;line-height:1.5">${meta.texto}</div>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px">AVALIAÇÃO SMART</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          ${letters.map(l => `
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+              <div style="width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;background:${parsed.analise[l] ? 'var(--success)' : 'var(--border)'};color:${parsed.analise[l] ? 'white' : 'var(--text3)'}">
+                ${l}
+              </div>
+              <div style="font-size:10px;color:var(--text3)">${labels[l]}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div style="font-size:12px;color:var(--text2);padding:10px;background:var(--warning-light);border-radius:6px;border-left:3px solid var(--warning)">
+          ${parsed.analise.comentarios}
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px">META REESCRITA (SMART)</div>
+        <div id="smart-meta-text" style="font-size:13px;padding:12px;background:var(--success-light);border-radius:6px;border-left:3px solid var(--success);line-height:1.5;font-weight:500">
+          ${parsed.meta_smart}
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-success" onclick="aplicarSMART('${pessoaId}', '${metaId}', \`${parsed.meta_smart.replace(/`/g, "'")}\`, ${JSON.stringify(parsed.analise).replace(/"/g, '&quot;')})">
+          <i class="fas fa-check"></i> Aplicar Meta SMART
+        </button>
+        <button class="btn btn-outline" onclick="closeSmartModal()">Fechar</button>
+      </div>`;
+
+    // Atualiza o badge SMART na meta
+    meta.smart = parsed.analise;
+  } catch(e) {
+    content.innerHTML = `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Erro ao avaliar. Tente novamente.</div>`;
+  }
+}
+
+function aplicarSMART(pessoaId, metaId, novoTexto, smartData) {
+  const meta = state.metas[pessoaId]?.find(m => m.id === metaId);
+  if (meta) {
+    meta.texto = novoTexto;
+    meta.smart = typeof smartData === 'string' ? JSON.parse(smartData.replace(/&quot;/g, '"')) : smartData;
+  }
+  saveState();
+  closeSmartModal();
+
+  // Re-render
+  const pessoa = state.pessoas.find(p => p.id === pessoaId);
+  const nivel = HIERARQUIA[pessoa?.cargo]?.nivel ?? 0;
+  if (nivel === 0) renderPageCEO(pessoaId);
+  else if (nivel === 1) renderPageDiretores();
+  else if (nivel === 2) renderPageSuperintendentes();
+  else renderPageGerentes();
+}
+
+function closeSmartModal() {
+  document.getElementById('smart-modal').classList.remove('show');
+}
+
+// ===================== CONSOLIDADO =====================
+let consolidadoFiltro = '';
+
+function renderConsolidado() {
+  const el = document.getElementById('consolidado-table');
+
+  const cargosDisponiveis = [...new Set(state.pessoas.map(p => p.cargo))];
+  const filterHtml = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <label style="margin:0;font-size:13px">Filtrar por cargo:</label>
+      <select style="width:auto" onchange="consolidadoFiltro=this.value;renderConsolidado()">
+        <option value="">Todos os cargos</option>
+        ${cargosDisponiveis.map(c => `<option value="${c}" ${consolidadoFiltro===c?'selected':''}>${HIERARQUIA[c]?.label||c}</option>`).join('')}
+      </select>
+      <button class="btn btn-outline btn-sm" onclick="exportarExcelConsolidado()">
+        <i class="fas fa-file-excel"></i> Exportar Excel
+      </button>
+    </div>`;
+
+  const pessoasFiltradas = consolidadoFiltro
+    ? state.pessoas.filter(p => p.cargo === consolidadoFiltro)
+    : state.pessoas;
+
+  const todasMetas = [];
+  pessoasFiltradas.forEach(p => {
+    const metas = state.metas[p.id] || [];
+    metas.forEach(m => {
+      const obj = state.objetivos.find(o => o.id === m.objId);
+      todasMetas.push({
+        pessoa: p.nome,
+        cargo: HIERARQUIA[p.cargo]?.label || p.cargo,
+        nivel: HIERARQUIA[p.cargo]?.nivel ?? 99,
+        meta: m.texto,
+        peso: m.peso,
+        perspectiva: obj?.perspectiva || '—',
+        objetivo: obj?.texto?.substring(0, 60) || '—',
+        validado: state.validados[p.id],
+      });
+    });
+  });
+
+  if (!todasMetas.length) {
+    el.innerHTML = filterHtml + '<div class="empty-state"><i class="fas fa-table"></i><p>Nenhuma meta gerada ainda.</p></div>';
+    return;
+  }
+
+  todasMetas.sort((a, b) => a.nivel - b.nivel || a.pessoa.localeCompare(b.pessoa));
+
+  el.innerHTML = filterHtml + `
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Profissional</th>
+            <th>Cargo</th>
+            <th>Meta</th>
+            <th>Peso</th>
+            <th>Pilar</th>
+            <th>Objetivo Estratégico</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${todasMetas.map(m => `
+            <tr>
+              <td><strong>${m.pessoa}</strong></td>
+              <td style="font-size:12px;white-space:nowrap">${m.cargo}</td>
+              <td style="font-size:12px;max-width:280px">${m.meta}</td>
+              <td style="text-align:center"><span class="badge badge-gray">${m.peso}%</span></td>
+              <td style="font-size:12px;white-space:nowrap">${m.perspectiva}</td>
+              <td style="font-size:11px;color:var(--text3);max-width:200px">${m.objetivo}</td>
+              <td><span class="badge ${m.validado ? 'badge-green' : 'badge-amber'}">${m.validado ? 'Validada' : 'Em elaboração'}</span></td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function exportarExcelConsolidado() {
+  if (typeof XLSX === 'undefined') { alert('Biblioteca XLSX não carregada. Verifique conexão.'); return; }
+
+  const pessoasFiltradas = consolidadoFiltro
+    ? state.pessoas.filter(p => p.cargo === consolidadoFiltro)
+    : state.pessoas;
+
+  const rows = [['Profissional','Cargo','Meta','Peso (%)','Pilar Estratégico','Objetivo Estratégico','Resultado 0%','Resultado 50%','Resultado 75%','Resultado 100%','Status']];
+  pessoasFiltradas.sort((a,b) => (HIERARQUIA[a.cargo]?.nivel??9)-(HIERARQUIA[b.cargo]?.nivel??9)).forEach(p => {
+    (state.metas[p.id]||[]).forEach(m => {
+      const obj = state.objetivos.find(o=>o.id===m.objId);
+      const f = m.faixas || {};
+      rows.push([
+        p.nome,
+        HIERARQUIA[p.cargo]?.label||p.cargo,
+        m.texto,
+        m.peso,
+        obj?.perspectiva||'',
+        obj?.texto||'',
+        f[0]||'',
+        f[50]||'',
+        f[75]||'',
+        f[100]||'',
+        state.validados[p.id] ? 'Validada' : 'Em elaboração'
+      ]);
+    });
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [20,25,60,10,20,40,35,35,35,35,15].map(w=>({wch:w}));
+  const cargo = consolidadoFiltro ? (HIERARQUIA[consolidadoFiltro]?.label||consolidadoFiltro) : 'Todos';
+  XLSX.utils.book_append_sheet(wb, ws, cargo.substring(0,30));
+  XLSX.writeFile(wb, `Metas_${cargo.replace(/[^a-zA-Z0-9]/g,'_')}_${state.ano}.xlsx`);
+}
+
+
+// ===================== VALIDAÇÃO =====================
+function renderValidacao() {
+  const el = document.getElementById('validacao-content');
+  if (!el) return;
+
+  const todasPessoas = state.pessoas;
+  if (!todasPessoas.length) {
+    el.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-check"></i><p>Cadastre profissionais e gere metas para validar.</p></div>';
+    return;
+  }
+
+  // ── 1. PESOS por profissional ──────────────────────────────────
+  let pesosHtml = '';
+  todasPessoas.forEach(p => {
+    const metas = state.metas[p.id] || [];
+    if (!metas.length) return;
+    const total = metas.reduce((s, m) => s + (parseFloat(m.peso) || 0), 0);
+    const ok = Math.abs(total - 100) < 0.5;
+    pesosHtml += `
+      <div class="meta-card" style="margin-bottom:8px;cursor:${ok?'default':'pointer'}" onclick="${ok?'':` "showPage(\'${getNivelPage(p)}\')" `}">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="avatar" style="background:${ok?'var(--success)':'var(--danger)'}">${p.nome.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:500">${p.nome}</div>
+            <div style="font-size:11px;color:var(--text3)">${HIERARQUIA[p.cargo]?.label||p.cargo} · ${metas.length} metas</div>
+          </div>
+          <div style="text-align:right">
+            <span class="badge ${ok?'badge-green':'badge-red'}">${total.toFixed(0)}% ${ok?'✓':'≠ 100%'}</span>
+            ${!ok ? `<div style="font-size:11px;color:var(--danger);margin-top:3px">Clique para ajustar</div>` : ''}
+          </div>
+        </div>
+        ${!ok ? `<div style="margin-top:10px;padding:8px 12px;background:var(--danger-light);border-radius:6px;font-size:12px;color:var(--danger)">
+          <i class="fas fa-exclamation-triangle"></i> Pesos somam ${total.toFixed(1)}% — ajuste necessário antes da validação.
+          ${metas.map((m,i) => `<div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+            <span style="min-width:16px;font-weight:600">${i+1}.</span>
+            <span style="flex:1;font-size:11px">${m.texto.substring(0,60)}...</span>
+            <input type="number" value="${m.peso}" min="1" max="100" style="width:55px;padding:3px 6px;font-size:12px;text-align:center"
+              onclick="event.stopPropagation()"
+              onchange="updatePeso('${p.id}','${m.id}',this.value);renderValidacao()">
+            <span style="font-size:11px">%</span>
+          </div>`).join('')}
+          <div style="margin-top:8px;font-weight:500">Total: <span id="total-${p.id}">${total.toFixed(0)}%</span></div>
+        </div>` : ''}
+      </div>`;
+  });
+  if (!pesosHtml) pesosHtml = '<p style="color:var(--text3);font-size:13px">Nenhuma meta gerada ainda.</p>';
+
+  // ── 2. Análise IA de similaridade e conflitos ──────────────────
+  const iaSection = `
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn btn-accent" onclick="analisarIA_validacao()">
+        <i class="fas fa-robot"></i> Analisar Similaridade e Conflitos com IA
+      </button>
+    </div>
+    <div id="ia-analise-result"></div>`;
+
+  // ── 3. Tabela resumo por pilar e projeto ───────────────────────
+  const pilaresMap = {};
+  const projetosMap = {};
+  state.pessoas.forEach(p => {
+    (state.metas[p.id] || []).forEach(m => {
+      const obj = state.objetivos.find(o => o.id === m.objId);
+      const pilar = obj?.perspectiva || 'Sem pilar';
+      if (!pilaresMap[pilar]) pilaresMap[pilar] = { total: 0, pessoas: new Set() };
+      pilaresMap[pilar].total++;
+      pilaresMap[pilar].pessoas.add(p.nome);
+    });
+  });
+
+  // projeto coverage: check which projetos are referenced in metas text
+  state.projetos.forEach(pr => {
+    const key = pr.nome.substring(0, 30);
+    projetosMap[key] = { nome: pr.nome, total: 0, pessoas: new Set() };
+    state.pessoas.forEach(p => {
+      (state.metas[p.id] || []).forEach(m => {
+        const obj = state.objetivos.find(o => o.id === m.objId);
+        if (m.texto.toLowerCase().includes(pr.nome.toLowerCase().substring(0, 15)) ||
+            (obj && pr.areas && pr.areas.toLowerCase().includes(HIERARQUIA[p.cargo]?.label?.toLowerCase()?.split(' ')[1] || ''))) {
+          projetosMap[key].total++;
+          projetosMap[key].pessoas.add(p.nome);
+        }
+      });
+    });
+  });
+
+  const pilaresRows = Object.entries(pilaresMap).map(([pilar, data]) => `
+    <tr>
+      <td><strong>${pilar}</strong></td>
+      <td style="text-align:center">${data.total}</td>
+      <td style="font-size:12px">${[...data.pessoas].join(', ')}</td>
+      <td><span class="badge ${data.total>0?'badge-green':'badge-red'}">${data.total>0?'Coberto':'Sem metas'}</span></td>
+    </tr>`).join('');
+
+  const semPilar = state.objetivos.filter(o => !Object.keys(pilaresMap).includes(o.perspectiva) || pilaresMap[o.perspectiva]?.total === 0);
+
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title"><i class="fas fa-weight-hanging"></i> Verificação de Pesos por Profissional</div>
+      ${pesosHtml}
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title"><i class="fas fa-robot"></i> Análise IA — Similaridade e Conflitos</div>
+      ${iaSection}
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title"><i class="fas fa-chart-pie"></i> Cobertura por Pilar Estratégico</div>
+      ${pilaresRows ? `<div style="overflow-x:auto"><table>
+        <thead><tr><th>Pilar</th><th>Nº Metas</th><th>Profissionais</th><th>Status</th></tr></thead>
+        <tbody>${pilaresRows}</tbody>
+      </table></div>` : '<p style="color:var(--text3);font-size:13px">Nenhuma meta gerada ainda.</p>'}
+      ${semPilar.length ? `<div class="alert alert-warning" style="margin-top:12px"><i class="fas fa-exclamation-triangle"></i> Pilares sem cobertura: ${[...new Set(semPilar.map(o=>o.perspectiva))].join(', ')}</div>` : ''}
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="fas fa-project-diagram"></i> Cobertura por Projeto</div>
+      <div style="overflow-x:auto"><table>
+        <thead><tr><th>Projeto</th><th>Metas</th><th>Profissionais</th><th>Status</th></tr></thead>
+        <tbody>
+          ${Object.values(projetosMap).map(pr => `<tr>
+            <td style="font-size:12px"><strong>${pr.nome.substring(0,50)}${pr.nome.length>50?'...':''}</strong></td>
+            <td style="text-align:center">${pr.total}</td>
+            <td style="font-size:11px">${[...pr.pessoas].join(', ') || '—'}</td>
+            <td><span class="badge ${pr.total>0?'badge-green':'badge-gray'}">${pr.total>0?'Referenciado':'Sem metas'}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>
+    </div>`;
+}
+
+function getNivelPage(pessoa) {
+  const nivel = HIERARQUIA[pessoa?.cargo]?.nivel ?? 0;
+  return ['ceo','diretores','superintendentes','gerentes'][nivel];
+}
+
+async function analisarIA_validacao() {
+  const resultEl = document.getElementById('ia-analise-result');
+  if (!resultEl) return;
+  resultEl.innerHTML = '<div class="ai-thinking"><i class="fas fa-circle-notch fa-spin"></i> Analisando metas com IA — isso pode levar alguns segundos...</div><div class="loading-bar" style="margin-top:8px"></div>';
+
+  // Build summary of all metas
+  const resumo = state.pessoas.map(p => {
+    const metas = state.metas[p.id] || [];
+    if (!metas.length) return null;
+    return {
+      cargo: HIERARQUIA[p.cargo]?.label || p.cargo,
+      nome: p.nome,
+      metas: metas.map(m => ({ texto: m.texto, peso: m.peso, pilar: state.objetivos.find(o=>o.id===m.objId)?.perspectiva || '' }))
+    };
+  }).filter(Boolean);
+
+  if (!resumo.length) {
+    resultEl.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Nenhuma meta disponível para análise.</div>';
+    return;
+  }
+
+  const prompt = `Você é especialista em gestão de metas corporativas. Analise as metas abaixo de diferentes cargos de uma empresa de terminais portuários.
+
+METAS POR CARGO:
+${JSON.stringify(resumo, null, 2)}
+
+Identifique:
+1. SIMILARIDADES: metas com objetivo parecido entre áreas/cargos diferentes mas com pesos muito distintos (diferença > 10pp)
+2. CONFLITOS: metas que podem se contradizer ou gerar conflito de prioridade entre áreas
+
+Responda APENAS em JSON sem texto adicional:
+{
+  "similaridades": [
+    {
+      "descricao": "descrição clara da similaridade",
+      "cargos_envolvidos": ["Cargo A", "Cargo B"],
+      "pesos": [20, 35],
+      "recomendacao": "alinhamento sugerido"
+    }
+  ],
+  "conflitos": [
+    {
+      "descricao": "descrição do conflito",
+      "cargos_envolvidos": ["Cargo A", "Cargo B"],
+      "impacto": "possível impacto"
+    }
+  ],
+  "resumo_geral": "avaliação geral em 2-3 frases"
+}`;
+
+  try {
+    const resp = await callAI(prompt);
+    const clean = resp.replace(/\`\`\`json|\`\`\`/g, '').trim();
+    const data = JSON.parse(clean);
+
+    let html = '';
+    if (data.resumo_geral) {
+      html += `<div class="alert alert-info" style="margin-bottom:12px"><i class="fas fa-info-circle"></i> ${data.resumo_geral}</div>`;
+    }
+    if (data.similaridades?.length) {
+      html += `<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--warning);margin-bottom:8px"><i class="fas fa-balance-scale"></i> Similaridades com Pesos Distintos</div>`;
+      data.similaridades.forEach(s => {
+        html += `<div class="similarity-warning" style="margin-bottom:8px">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div>
+            <div style="font-weight:500;margin-bottom:4px">${s.descricao}</div>
+            <div style="font-size:11px">Cargos: ${s.cargos_envolvidos?.join(' vs ')} · Pesos: ${s.pesos?.join('% vs ')}%</div>
+            <div style="font-size:11px;margin-top:3px;color:var(--text2)">💡 ${s.recomendacao}</div>
+          </div>
+        </div>`;
+      });
+    } else {
+      html += `<div class="badge badge-green" style="margin-bottom:8px"><i class="fas fa-check"></i> Nenhuma similaridade problemática detectada</div><br>`;
+    }
+    if (data.conflitos?.length) {
+      html += `<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--danger);margin:12px 0 8px"><i class="fas fa-exclamation-circle"></i> Potenciais Conflitos Entre Áreas</div>`;
+      data.conflitos.forEach(c => {
+        html += `<div style="background:var(--danger-light);border:1px solid var(--danger);border-radius:6px;padding:10px 12px;margin-bottom:8px;font-size:12px">
+          <div style="font-weight:500;color:var(--danger);margin-bottom:4px"><i class="fas fa-times-circle"></i> ${c.descricao}</div>
+          <div style="color:var(--text2)">Cargos: ${c.cargos_envolvidos?.join(' × ')}</div>
+          <div style="color:var(--text3);margin-top:3px">Impacto: ${c.impacto}</div>
+        </div>`;
+      });
+    } else {
+      html += `<div class="badge badge-green"><i class="fas fa-check"></i> Nenhum conflito detectado entre áreas</div>`;
+    }
+    resultEl.innerHTML = html;
+  } catch(e) {
+    resultEl.innerHTML = `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Erro na análise: ${e.message}</div>`;
+  }
+}
+
+
+// ===================== DASHBOARD =====================
+function updateDashboard() {
+  const totalMetas = Object.values(state.metas).reduce((s, arr) => s + arr.length, 0);
+  document.getElementById('stat-metas').textContent = totalMetas;
+  document.getElementById('stat-pessoas').textContent = state.pessoas.length;
+  document.getElementById('stat-objetivos').textContent = state.objetivos.length;
+
+  const maxMetas = state.pessoas.length * 5 || 1;
+  document.getElementById('prog-metas').style.width = Math.min(100, (totalMetas / maxMetas) * 100) + '%';
+
+  // Progress por nível
+  const niveis = [
+    { key: 'ceo', cargos: ['ceo'] },
+    { key: 'dir', cargos: ['cfo', 'coo'] },
+    { key: 'sup', cargos: ['sup-financeiro', 'sup-operacional'] },
+    { key: 'ger', cargos: Object.keys(HIERARQUIA).filter(k => HIERARQUIA[k].nivel === 3) },
+  ];
+
+  niveis.forEach(n => {
+    const pessoas = state.pessoas.filter(p => n.cargos.includes(p.cargo));
+    const validados = pessoas.filter(p => state.validados[p.id]).length;
+    const pct = pessoas.length ? Math.round((validados / pessoas.length) * 100) : 0;
+    document.getElementById(`prog-${n.key}`).style.width = pct + '%';
+    document.getElementById(`prog-${n.key}-pct`).textContent = pct + '%';
+  });
+}
+
+// Flush any textarea edits that are open before leaving a page
+function flushOpenEdits() {
+  // Flush meta text edits
+  document.querySelectorAll('.meta-text-edit.show').forEach(edit => {
+    const metaId = edit.id.replace('edit-', '');
+    const view = document.getElementById('view-' + metaId);
+    const novoTexto = edit.value.trim();
+    if (novoTexto) {
+      for (const [pessoaId, metas] of Object.entries(state.metas)) {
+        const meta = metas.find(m => m.id === metaId);
+        if (meta) {
+          meta.texto = novoTexto;
+          if (view) view.textContent = novoTexto;
+          break;
+        }
+      }
+    }
+  });
+  // Flush faixa edits
+  document.querySelectorAll('.faixa-desc-edit.show').forEach(edit => {
+    // id format: fedit-{metaId}-{pct}
+    const parts = edit.id.replace('fedit-', '').split('-');
+    const pct = parseInt(parts.pop());
+    const metaId = parts.join('-');
+    const valor = edit.value.trim();
+    for (const [pessoaId, metas] of Object.entries(state.metas)) {
+      const meta = metas.find(m => m.id === metaId);
+      if (meta) {
+        if (!meta.faixas) meta.faixas = {};
+        meta.faixas[pct] = valor;
+        break;
+      }
+    }
+  });
+  saveState();
+}
+
+// ===================== TOAST =====================
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const icons = { success: 'fa-check-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<i class="fas ${icons[type]||'fa-info-circle'}"></i> ${msg}`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3100);
+}
+
+// ===================== META MANUAL =====================
+let manualMetaCtx = null;
+
+function abrirAddMetaManualCEO() {
+  const ceo = state.pessoas.find(p => p.cargo === 'ceo');
+  if (!ceo) { showToast('Cadastre o CEO no Organograma primeiro', 'warning'); return; }
+  abrirAddMetaManual(ceo.id);
+}
+
+function abrirAddMetaManual(pessoaId) {
+  const pessoa = state.pessoas.find(p => p.id === pessoaId);
+  if (!pessoa) return;
+  manualMetaCtx = { pessoaId };
+
+  const info = document.getElementById('manual-meta-pessoa-info');
+  if (info) info.innerHTML = `<strong>${pessoa.nome}</strong> — ${HIERARQUIA[pessoa.cargo]?.label || pessoa.cargo}`;
+
+  const sel = document.getElementById('manual-meta-obj');
+  if (sel) sel.innerHTML = state.objetivos.map(o =>
+    `<option value="${o.id}">[${o.perspectiva}] ${o.texto.substring(0,70)}${o.texto.length>70?'...':''}</option>`
+  ).join('');
+
+  const txt = document.getElementById('manual-meta-texto');
+  if (txt) txt.value = '';
+  const peso = document.getElementById('manual-meta-peso');
+  if (peso) peso.value = '20';
+
+  document.getElementById('manual-meta-modal').classList.add('show');
+}
+
+function confirmarMetaManual() {
+  if (!manualMetaCtx) return;
+  const texto = document.getElementById('manual-meta-texto')?.value.trim();
+  if (!texto) { showToast('Informe a descrição da meta', 'warning'); return; }
+  const peso = parseFloat(document.getElementById('manual-meta-peso')?.value) || 20;
+  const objId = document.getElementById('manual-meta-obj')?.value;
+  const { pessoaId } = manualMetaCtx;
+
+  const novaMeta = {
+    id: 'meta_' + Date.now(),
+    texto,
+    peso,
+    objId,
+    smart: null,
+    pinned: true,        // FIXADA — não apagada pela IA
+    manual: true,        // marcador visual
+    faixas: {},
+  };
+
+  state.metas[pessoaId] = state.metas[pessoaId] || [];
+  state.metas[pessoaId].push(novaMeta);
+  saveState();
+  closeModal('manual-meta-modal');
+
+  const pessoa = state.pessoas.find(p => p.id === pessoaId);
+  showToast(`Meta manual fixada para ${pessoa?.nome}`, 'success');
+  refreshCurrentPage();
+  updateDashboard();
+}
+
+// ===================== FAIXAS DE RESULTADO =====================
+
+function toggleFaixas(metaId) {
+  const body = document.getElementById('faixas-body-' + metaId);
+  const chev = document.getElementById('faixas-chev-' + metaId);
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (chev) chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+function toggleFaixaEdit(metaId, pct) {
+  const desc = document.getElementById(`fdesc-${metaId}-${pct}`);
+  const edit = document.getElementById(`fedit-${metaId}-${pct}`);
+  if (!desc || !edit) return;
+  const isEditing = edit.classList.contains('show');
+  if (isEditing) {
+    desc.classList.remove('hide');
+    edit.classList.remove('show');
+    // value already saved via onchange
+  } else {
+    desc.classList.add('hide');
+    edit.classList.add('show');
+    edit.focus();
+  }
+}
+
+function updateFaixa(pessoaId, metaId, pct, valor) {
+  const meta = state.metas[pessoaId]?.find(m => m.id === metaId);
+  if (!meta) return;
+  if (!meta.faixas) meta.faixas = {};
+  meta.faixas[pct] = valor.trim();
+  // Also update the desc view
+  const desc = document.getElementById(`fdesc-${metaId}-${pct}`);
+  if (desc) desc.innerHTML = valor.trim() || '<em style="opacity:.4">Não definido</em>';
+  saveState();
+}
+
+async function gerarFaixasIA(pessoaId, metaId) {
+  const meta = state.metas[pessoaId]?.find(m => m.id === metaId);
+  if (!meta) return;
+
+  const statusEl = document.getElementById(`faixas-ai-status-${metaId}`);
+  const body = document.getElementById(`faixas-body-${metaId}`);
+  if (body) body.style.display = 'block';
+  const chev = document.getElementById(`faixas-chev-${metaId}`);
+  if (chev) chev.style.transform = 'rotate(180deg)';
+  if (statusEl) statusEl.innerHTML = `<div class="faixas-ai-loading"><i class="fas fa-circle-notch fa-spin"></i> Gerando faixas com IA...</div>`;
+
+  const cargo = HIERARQUIA[state.pessoas.find(p => p.id === pessoaId)?.cargo]?.label || '';
+  const obj = state.objetivos.find(o => o.id === meta.objId);
+
+  const prompt = `Você é especialista em gestão de desempenho e metas corporativas (metodologia BSC/OKR).
+
+Meta: "${meta.texto}"
+Cargo: ${cargo}
+Pilar Estratégico: ${obj?.perspectiva || ''}
+Objetivo: ${obj?.texto || ''}
+
+Defina 4 faixas de resultado para avaliação do atingimento desta meta.
+Cada faixa deve ter uma descrição OBJETIVA e MENSURÁVEL do que representa aquele nível de atingimento.
+As faixas devem ser coerentes entre si e representar uma progressão lógica.
+
+Regras:
+- 0%: Resultado muito abaixo do esperado — descreva o cenário de não entrega ou entrega mínima
+- 50%: Resultado parcial — descreva entrega com limitações significativas  
+- 75%: Resultado quase pleno — descreva entrega com pequenas lacunas
+- 100%: Meta plenamente atingida — descreva o resultado esperado completo
+
+Use linguagem concisa (1-2 frases por faixa), com dados concretos quando possível.
+
+Responda APENAS em JSON:
+{
+  "0": "descrição do resultado para 0%",
+  "50": "descrição do resultado para 50%",
+  "75": "descrição do resultado para 75%",
+  "100": "descrição do resultado para 100%"
+}`;
+
+  try {
+    const resp = await callAI(prompt);
+    const clean = resp.replace(/```json|```/g, '').trim();
+    const data = JSON.parse(clean);
+
+    if (!meta.faixas) meta.faixas = {};
+    [0, 50, 75, 100].forEach(pct => {
+      if (data[String(pct)]) {
+        meta.faixas[pct] = data[String(pct)];
+        // Update DOM directly (avoid full re-render)
+        const desc = document.getElementById(`fdesc-${metaId}-${pct}`);
+        const edit = document.getElementById(`fedit-${metaId}-${pct}`);
+        if (desc) { desc.innerHTML = data[String(pct)]; desc.classList.remove('hide'); }
+        if (edit) { edit.value = data[String(pct)]; edit.classList.remove('show'); }
+      }
+    });
+
+    // Update faixas header to show "preenchido"
+    const faixasHeader = document.querySelector(`#faixas-sec-${metaId} .faixas-label`);
+    if (faixasHeader) {
+      faixasHeader.innerHTML = `<i class="fas fa-chart-bar"></i> Faixas de Resultado <span style="color:var(--success);font-size:10px">✓ preenchido</span>`;
+    }
+
+    saveState();
+    if (statusEl) statusEl.innerHTML = '';
+  } catch(e) {
+    if (statusEl) statusEl.innerHTML = `<div style="color:var(--danger);font-size:12px;padding:4px 0"><i class="fas fa-exclamation-triangle"></i> Erro: ${e.message} <button class="btn btn-ghost btn-sm" onclick="gerarFaixasIA('${pessoaId}','${metaId}')">Tentar novamente</button></div>`;
+  }
+}
+
+// Gerar faixas para TODAS as metas de uma pessoa de uma vez
+async function gerarTodasFaixasIA(pessoaId) {
+  const metas = state.metas[pessoaId] || [];
+  if (!metas.length) { alert('Nenhuma meta para gerar faixas.'); return; }
+  for (const meta of metas) {
+    await gerarFaixasIA(pessoaId, meta.id);
+    await new Promise(r => setTimeout(r, 300)); // small delay between calls
+  }
+}
+
+// ===================== REPLICAR META =====================
+let replicarCtx = null; // { pessoaId, metaId, selectedDest }
+
+function abrirReplicar(pessoaId, metaId) {
+  const meta = state.metas[pessoaId]?.find(m => m.id === metaId);
+  if (!meta) return;
+  replicarCtx = { pessoaId, metaId, selectedDest: null };
+  document.getElementById('replicar-meta-preview').textContent = meta.texto;
+
+  const lista = document.getElementById('replicar-pessoas-list');
+  lista.innerHTML = '';
+  state.pessoas.filter(p => p.id !== pessoaId).forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'pessoa-select-item';
+    div.dataset.pid = p.id;
+    div.innerHTML = `
+      <div class="avatar" style="width:28px;height:28px;font-size:10px">${p.nome.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+      <div>
+        <div style="font-size:13px">${p.nome}</div>
+        <div style="font-size:11px;color:var(--text3)">${HIERARQUIA[p.cargo]?.label||p.cargo}</div>
+      </div>`;
+    div.addEventListener('click', () => {
+      lista.querySelectorAll('.pessoa-select-item').forEach(el => el.classList.remove('selected'));
+      div.classList.add('selected');
+      replicarCtx.selectedDest = p.id;
+    });
+    lista.appendChild(div);
+  });
+
+  document.getElementById('replicar-modal').classList.add('show');
+}
+
+function selecionarDestReplicar(pessoaId) {
+  // kept for compatibility — logic now inside event listeners
+  replicarCtx.selectedDest = pessoaId;
+}
+
+function confirmarReplicar() {
+  if (!replicarCtx?.selectedDest) { alert('Selecione um profissional de destino.'); return; }
+  const meta = state.metas[replicarCtx.pessoaId]?.find(m => m.id === replicarCtx.metaId);
+  if (!meta) return;
+  const destId = replicarCtx.selectedDest;
+  state.metas[destId] = state.metas[destId] || [];
+  const novaMeta = {
+    ...JSON.parse(JSON.stringify(meta)),
+    id: 'meta_' + Date.now(),
+    smart: null,
+  };
+  state.metas[destId].push(novaMeta);
+  saveState();
+  closeModal('replicar-modal');
+  const destNome = state.pessoas.find(p=>p.id===destId)?.nome;
+  // Show a brief toast instead of blocking alert
+  showToast(`Meta replicada para ${destNome}`, 'success');
+  refreshCurrentPage();
+  updateDashboard();
+}
+
+// ===================== DERIVAR META =====================
+let derivarCtx = null;
+
+function abrirDerivar(pessoaId, metaId) {
+  const meta = state.metas[pessoaId]?.find(m => m.id === metaId);
+  if (!meta) return;
+  derivarCtx = { pessoaId, metaId, selectedDest: null };
+  document.getElementById('derivar-meta-preview').textContent = meta.texto;
+
+  const lista = document.getElementById('derivar-pessoas-list');
+  lista.innerHTML = '';
+  state.pessoas.filter(p => p.id !== pessoaId).forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'pessoa-select-item';
+    div.dataset.pid = p.id;
+    div.innerHTML = `
+      <div class="avatar" style="width:28px;height:28px;font-size:10px;background:var(--accent);color:var(--primary)">${p.nome.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+      <div>
+        <div style="font-size:13px">${p.nome}</div>
+        <div style="font-size:11px;color:var(--text3)">${HIERARQUIA[p.cargo]?.label||p.cargo}</div>
+      </div>`;
+    div.addEventListener('click', () => {
+      lista.querySelectorAll('.pessoa-select-item').forEach(el => el.classList.remove('selected'));
+      div.classList.add('selected');
+      derivarCtx.selectedDest = p.id;
+    });
+    lista.appendChild(div);
+  });
+
+  document.getElementById('derivar-modal').classList.add('show');
+}
+
+function selecionarDestDerivar(pessoaId) {
+  derivarCtx.selectedDest = pessoaId;
+}
+
+function confirmarDerivar() {
+  if (!derivarCtx?.selectedDest) { alert('Selecione um profissional de destino.'); return; }
+  const meta = state.metas[derivarCtx.pessoaId]?.find(m => m.id === derivarCtx.metaId);
+  if (!meta) return;
+  state.metas[derivarCtx.selectedDest] = state.metas[derivarCtx.selectedDest] || [];
+  state.metas[derivarCtx.selectedDest].push({
+    ...JSON.parse(JSON.stringify(meta)),
+    id: 'meta_' + Date.now(),
+    pinned: true,           // FIXADA — não será apagada pela IA
+    derivadaDe: derivarCtx.pessoaId,
+    smart: null,
+  });
+  saveState();
+  closeModal('derivar-modal');
+  const destNome2 = state.pessoas.find(p=>p.id===derivarCtx.selectedDest)?.nome;
+  showToast(`Meta derivada e fixada para ${destNome2} — não será apagada pela IA`, 'success');
+  refreshCurrentPage();
+  updateDashboard();
+}
+
+// ===================== APAGAR NÍVEL =====================
+let apagarNivelCtx = null;
+
+function abrirApagarNivel(pessoaId) {
+  const pessoa = state.pessoas.find(p => p.id === pessoaId);
+  const metas = state.metas[pessoaId] || [];
+  const pinned = metas.filter(m => m.pinned).length;
+  apagarNivelCtx = { pessoaId };
+  const msg = `Apagar todas as ${metas.length} meta(s) de <strong>${pessoa?.nome}</strong>?`
+    + (pinned > 0 ? `<br><br><span style="color:var(--warning)"><i class="fas fa-exclamation-triangle"></i> ${pinned} meta(s) fixada(s) também serão removidas.</span>` : '');
+  document.getElementById('apagar-nivel-msg').innerHTML = msg;
+  document.getElementById('apagar-nivel-modal').classList.add('show');
+}
+
+function confirmarApagarNivel() {
+  if (!apagarNivelCtx) return;
+  const pid = apagarNivelCtx.pessoaId;
+  state.metas[pid] = [];
+  state.validados[pid] = false;
+  saveState();
+  closeModal('apagar-nivel-modal');
+  // Force re-render of the correct page
+  const pessoa = state.pessoas.find(p => p.id === pid);
+  const nivel = HIERARQUIA[pessoa?.cargo]?.nivel ?? 0;
+  if (nivel === 0) {
+    const el = document.getElementById('ceo-content');
+    if (el) {
+      el.innerHTML = `<div class="alert alert-info" style="margin-bottom:16px"><i class="fas fa-info-circle"></i> Metas apagadas. Clique em Gerar para criar novas.</div>
+        <button class="btn btn-accent btn-lg" onclick="gerarMetasCEO()"><i class="fas fa-robot"></i> Gerar Metas do CEO com IA</button>
+        <button class="btn btn-outline btn-lg" style="margin-left:8px" onclick="abrirAddMetaManual('${pid}')"><i class="fas fa-plus"></i> Inserir Manualmente</button>`;
+    }
+  } else if (nivel === 1) renderPageDiretores();
+  else if (nivel === 2) renderPageSuperintendentes();
+  else renderPageGerentes();
+  updateDashboard();
+  showToast('Metas apagadas com sucesso', 'warning');
+}
+
+// ===================== UTILS =====================
+function closeModal(id) {
+  document.getElementById(id)?.classList.remove('show');
+}
+
+function refreshCurrentPage() {
+  // Find which page is currently active and re-render
+  const activePage = document.querySelector('.page.active')?.id?.replace('page-', '');
+  if (activePage === 'ceo') {
+    const ceo = state.pessoas.find(p => p.cargo === 'ceo');
+    if (ceo && state.metas[ceo.id]?.length) renderPageCEO(ceo.id);
+  } else if (activePage === 'diretores') renderPageDiretores();
+  else if (activePage === 'superintendentes') renderPageSuperintendentes();
+  else if (activePage === 'gerentes') renderPageGerentes();
+}
+
+// ===================== HOOKS DE NAVEGAÇÃO =====================
+const origShowPage = showPage;
+
+// Override to trigger renders
+window.showPage = function(id) {
+  flushOpenEdits();
+  origShowPage(id);
+  if (id === 'diretores') renderPageDiretores();
+  if (id === 'superintendentes') renderPageSuperintendentes();
+  if (id === 'gerentes') renderPageGerentes();
+  if (id === 'validacao') renderValidacao();
+  if (id === 'consolidado') renderConsolidado();
+};
+
+// ===================== DADOS REAIS =====================
+function resetarDados() {
+  if (!confirm('⚠️ Isso apagará TODOS os dados (metas, profissionais, objetivos, projetos) e carregará os dados padrão das Diretrizes 2025.\n\nContinuar?')) return;
+  localStorage.removeItem('metaflow_state_v1');
+  location.reload();
+}
+
+function seedDemoData() {
+  if (state.pessoas.length || state.objetivos.length) return;
+
+  // PESSOAS (cargos reais — sem nomes, usuário preenche no Organograma)
+  const pessoas = [
+    { id: 'p001', nome: '(CEO — preencha o nome)', cargo: 'ceo' },
+    { id: 'p002', nome: '(CFO — preencha o nome)', cargo: 'cfo' },
+    { id: 'p003', nome: '(COO — preencha o nome)', cargo: 'coo' },
+    { id: 'p004', nome: '(Sup. Financeiro)',        cargo: 'sup-financeiro' },
+    { id: 'p005', nome: '(Sup. Operacional)',       cargo: 'sup-operacional' },
+    { id: 'p006', nome: '(Ger. Administrativo)',    cargo: 'ger-administrativo' },
+    { id: 'p007', nome: '(Ger. Engenharia)',        cargo: 'ger-engenharia' },
+    { id: 'p008', nome: '(Ger. Novos Negócios)',    cargo: 'ger-negocios' },
+    { id: 'p009', nome: '(Ger. SSMA)',              cargo: 'ger-ssma' },
+    { id: 'p010', nome: '(Ger. Comercial)',         cargo: 'ger-comercial' },
+    { id: 'p011', nome: '(Ger. Logística)',         cargo: 'ger-logistica' },
+    { id: 'p012', nome: '(Ger. TI)',                cargo: 'ger-ti' },
+    { id: 'p013', nome: '(Ger. Manutenção)',        cargo: 'ger-manutencao' },
+    { id: 'p014', nome: '(Ger. Operação)',          cargo: 'ger-operacao' },
+    { id: 'p015', nome: '(Ger. Qualidade/Automação)', cargo: 'ger-qualidade' },
+    { id: 'p016', nome: '(Ger. RH)',                cargo: 'ger-rh' },
+  ];
+  pessoas.forEach(p => { state.pessoas.push(p); state.metas[p.id] = []; });
+
+  // ── DIRETRIZES 2025 — Fonte: Diretrizes_Metas_2025.xlsx ──────────
+  const objetivos = [
+    // Ambiental
+    { perspectiva: 'Ambiental', texto: 'Eliminar tanto vazamentos quanto derramamentos de produtos', indicador: 'Nº ocorrências' },
+    { perspectiva: 'Ambiental', texto: 'Aumentar eficiência e reduzir custo do aquecimento de produtos', indicador: 'Custo aquecimento (R$)' },
+    { perspectiva: 'Ambiental', texto: 'Reduzir geração de resíduos líquidos', indicador: 'Volume resíduos líquidos (m³)' },
+    // Cliente
+    { perspectiva: 'Cliente', texto: 'Ampliar variedade de análises e certificar os serviços do Laboratório Químico', indicador: 'Certificações Lab. Químico' },
+    { perspectiva: 'Cliente', texto: 'Prospectar oportunidades e convertê-las em contratos para o CT4C antes da entrega da obra', indicador: 'Contratos CT4C (#)' },
+    { perspectiva: 'Cliente', texto: 'Prospectar oportunidades e convertê-las em contratos para o CT5 antes do início da obra', indicador: 'Contratos CT5 (#)' },
+    { perspectiva: 'Cliente', texto: 'Implementar gestão de conta e sistematizar inteligência de mercado', indicador: 'Contas gerenciadas (#)' },
+    { perspectiva: 'Cliente', texto: 'Implementar 100% do carregamento rodoviário de aquecidos no CT-2 através de skids com medidores mássicos', indicador: 'Implementação medidores mássicos (%)' },
+    { perspectiva: 'Cliente', texto: 'Fortalecer a cultura de customer centricity', indicador: 'NPS clientes' },
+    // Crescimento
+    { perspectiva: 'Crescimento', texto: 'Iniciar a construção do CT5', indicador: 'Marco de início de obra' },
+    { perspectiva: 'Crescimento', texto: 'Finalizar a obra do CT4-C', indicador: 'Data de entrega CT4-C' },
+    { perspectiva: 'Crescimento', texto: 'Obter licenças e autorizações para início das obras da ampliação do píer privado', indicador: 'Licenças obtidas (#)' },
+    { perspectiva: 'Crescimento', texto: 'Desenvolver o projeto do revamp da plataforma ferroviária do CT-1', indicador: 'Projeto aprovado (S/N)' },
+    { perspectiva: 'Crescimento', texto: 'Repotencializar o berço externo do píer privado atual para a operação de navios tipo LR2', indicador: 'Calado atingido (m)' },
+    // Inovação & Tecnologia
+    { perspectiva: 'Inovação & Tecnologia', texto: 'Emitir 100% das NFs através dos dados dos medidores mássicos em substituição às balanças dos CT-1, CT-3 e CT-4', indicador: 'NFs emitidas por medidor (%)' },
+    { perspectiva: 'Inovação & Tecnologia', texto: 'Automatizar e centralizar a operação das balanças', indicador: 'Balanças centralizadas (#)' },
+    { perspectiva: 'Inovação & Tecnologia', texto: 'Garantir a integridade de tanques e dutos', indicador: 'Inspeções concluídas no prazo (%)' },
+    { perspectiva: 'Inovação & Tecnologia', texto: 'Implementar sistemas autônomos de identificação de desvios de processo e anomalias de equipamento', indicador: 'Sistemas implantados (#)' },
+    { perspectiva: 'Inovação & Tecnologia', texto: 'Automatizar e aportar IA no POM', indicador: 'Módulos IA ativos no POM (#)' },
+    { perspectiva: 'Inovação & Tecnologia', texto: 'Implementar PETI (Plano Estratégico de TI) Fase 2', indicador: 'Entregas PETI Fase 2 (%)' },
+    // Sustentabilidade
+    { perspectiva: 'Sustentabilidade', texto: 'Obter certificação ISO 22.300', indicador: 'Certificação ISO 22.300 (S/N)' },
+    { perspectiva: 'Sustentabilidade', texto: 'Obter certificação ISO 27.000', indicador: 'Certificação ISO 27.000 (S/N)' },
+    { perspectiva: 'Sustentabilidade', texto: 'Obter certificação Empresa B', indicador: 'Certificação Empresa B (S/N)' },
+    { perspectiva: 'Sustentabilidade', texto: 'Obter Selo Pró-Ética', indicador: 'Selo Pró-Ética (S/N)' },
+    // Trabalhadores
+    { perspectiva: 'Trabalhadores', texto: 'Obter Selo GPTW', indicador: 'Selo GPTW (S/N)' },
+    { perspectiva: 'Trabalhadores', texto: 'Implementar centro de treinamento para práticas operacionais', indicador: 'Centro implantado (S/N)' },
+    { perspectiva: 'Trabalhadores', texto: 'Iniciar a construção do anexo do prédio administrativo', indicador: 'Obra iniciada (S/N)' },
+  ];
+  objetivos.forEach((o, i) => {
+    state.objetivos.push({ id: 'o' + String(i+1).padStart(3,'0'), ...o });
+  });
+
+  // ── PROJETOS — Fonte: Investimentos_Próximos_5_anos_CAT2025.xlsx ──
+  const projetos = [
+    // Grandes Expansões
+    { nome: 'CT4-C + Nova Praça de Bombas',                 status: 'aberto',    areas: 'Projetos, Engenharia, Operação',          desc: 'Novo parque 191.100m³ para Metanol, Gasolina e Diesel. Capex ~R$411,6M. 2024–2025.' },
+    { nome: 'Projeto Coamo – Novo Terminal SC',              status: 'aberto',    areas: 'Projetos, Comercial, Logística',           desc: 'Terminal 85.600m³ para Diesel e Gasolina em SC. Capex ~R$234,8M. 2024–2025.' },
+    { nome: 'Píer – Ampliação Píer Privado 2 (Aframax)',    status: 'aberto',    areas: 'Projetos, Engenharia, SSMA',               desc: 'Novo píer 2 berços, navios Aframax, calado -16m. Capex ~R$200M. 2025–2026.' },
+    { nome: 'CT5 – Parque de Aquecidos (52.260 m³)',        status: 'aberto',    areas: 'Projetos, Engenharia, Comercial',          desc: 'Terminal aquecidos e óleos vegetais. Capex ~R$144,9M. 2024–2025.' },
+    { nome: 'CT-2 – Revamp 3ª Bacia Fase 1 (~21.000 m³)',  status: 'planejado', areas: 'Projetos, Manutenção, Operação',           desc: 'Bacia 3, caldeira, nova entrada energia. Capex ~R$150M. 2027–2028.' },
+    { nome: 'CT-2 – Revamp 3ª Bacia Fase 2 (125.000 m³ total)', status: 'planejado', areas: 'Projetos, Manutenção, Operação',      desc: 'Demolição Bacia 1 e reconstrução. Capex ~R$65M. 2029.' },
+    { nome: 'CT3-C – Novos Tanques Óleos Vegetais (29.704 m³)', status: 'planejado', areas: 'Projetos, Engenharia, Operação',      desc: 'Dois fases, óleos vegetais e combustíveis. Capex ~R$72,2M. 2026.' },
+    // Infraestrutura e Dutos
+    { nome: 'CT-1 – Novos Dutos Píer (2×10" + 2×14")',     status: 'aberto',    areas: 'Projetos, Operação, Manutenção',          desc: 'Novos dutos em piperack existente e ponte acesso. Capex ~R$40M. 2025–2027.' },
+    { nome: 'APPA – Elevação de Dutos (Piperack)',          status: 'aberto',    areas: 'Projetos, Engenharia',                    desc: 'Instalação piperack, substituição trechos enterrados. Capex ~R$30M. 2025–2026.' },
+    { nome: 'CT-1 – Revamp Praça de Bombas 1',             status: 'aberto',    areas: 'Manutenção, Engenharia',                  desc: 'Revamp completo praça de bombas 1. Capex ~R$37M. 2024.' },
+    { nome: 'CT-1 – Plataforma Ferroviária Soda Cáustica', status: 'aberto',    areas: 'Projetos, Operação, Engenharia',          desc: 'Adequação plataforma para soda cáustica, braços inox. Capex ~R$7M. 2025–2026.' },
+    { nome: 'CT-3 – Reforma Praça de Bombas CT3B + CCM',   status: 'planejado', areas: 'Manutenção, Engenharia',                  desc: 'Substituição motobombas, CCM, sistema espuma. Capex ~R$23,65M. 2027–2028.' },
+    { nome: 'CT-3 – Upgrade Rodoviário (12 baias simultâneas)', status: 'planejado', areas: 'Operação, Projetos',                  desc: '6 skids 2 tramos cada, melhoria acessibilidade. Capex ~R$15M. 2027–2028.' },
+    // Edificações
+    { nome: 'Prédio Anexo Cattalini – Fase 1',             status: 'aberto',    areas: 'Projetos, RH, Administrativo',            desc: 'Novo prédio RH, Diretoria, Comercial, Engenharia. Capex ~R$11M. 2024–2025.' },
+    { nome: 'Prédio Anexo Cattalini – Fase 2 (Auditório)', status: 'planejado', areas: 'Projetos, RH, Administrativo',            desc: 'Oficina Treinamentos, Auditório, Almoxarifado. Capex ~R$5M. 2026–2027.' },
+    { nome: 'Vestiários e Áreas de Convivência (todos sites)', status: 'aberto', areas: 'RH, Administrativo, SSMA',               desc: 'Adequação vestiários e convivência 5 anos. Capex ~R$2M. 2025.' },
+    // Segurança
+    { nome: 'CT-1 – Padronização Sistema Combate Incêndio', status: 'aberto',   areas: 'SSMA, Manutenção, Engenharia',            desc: 'Adequação manifolds bacias 1,2, praças bombas. Capex ~R$8,6M. 2025.' },
+    { nome: 'Sistema Detecção Vazamentos Dutos',            status: 'aberto',    areas: 'Manutenção, Operação, TI',                desc: 'Detecção vazamentos dutos exportação. Capex ~R$6M. 2025–2026.' },
+    { nome: 'Sensores Temperatura/Vibração – IA Preditiva', status: 'aberto',   areas: 'Manutenção, TI, Automação',               desc: 'Monitoramento IA manutenção preditiva. Capex ~R$0,8M. 2025–2027.' },
+    { nome: 'PIG Instrumentado – Inspeção InLine Dutos',    status: 'planejado', areas: 'Manutenção, Operação',                    desc: 'Inspeção inline dos dutos. Capex ~R$11,5M. 2028.' },
+    { nome: 'Adequações NR-10 e NR-12',                    status: 'aberto',    areas: 'SSMA, Manutenção',                        desc: 'Melhorias conformidade NR-10 e NR-12. Capex ~R$3,2M. 2024–2027.' },
+    // TI & Automação
+    { nome: 'Substituição ERP – SAP (melhorias)',           status: 'aberto',    areas: 'TI, Financeiro, Administrativo',          desc: 'Sustentação, melhorias e novas ondas mobile. Capex ~R$10,35M. 2023–2025.' },
+    { nome: 'PETI Fase 2 – Infraestrutura TI',             status: 'aberto',    areas: 'TI – Infra',                              desc: 'Hiperconvergência, SQL HA, storage, rede. Capex ~R$12,3M. 2024–2026.' },
+    { nome: 'Cyber Security (CASB/SASE/DLP/NAC/Cofre)',    status: 'aberto',    areas: 'TI – Infra',                              desc: 'Programa Cyber Security ISO 27.001. Capex ~R$2,86M. 2025–2029.' },
+    { nome: 'Revamp Totens e Automação Pesagem (IA)',       status: 'aberto',    areas: 'TI – Automação, Operação',                desc: 'Revamp totens, IA pesagem, densímetros. Capex ~R$8,4M. 2025.' },
+    { nome: 'Supervisório Manutenção (SCADA) + Segunda Fase Supervisório', status: 'aberto', areas: 'Manutenção, TI, Automação', desc: 'Sistema SCADA ativos manutenção + módulos Honeywell. Capex ~R$1,5M. 2025.' },
+    { nome: 'OCR + IA Generativa Processos Corporativos',  status: 'planejado', areas: 'TI – Sistemas, Administrativo',           desc: 'OCR formulários automáticos, IA generativa contratos, tour virtual. Capex ~R$0,9M. 2026.' },
+    { nome: 'Substituição Corporate Web',                  status: 'planejado', areas: 'TI – Sistemas',                           desc: 'Novo sistema Corporate Web. Capex ~R$10M. 2026.' },
+    // Eficiência Energética e Manutenção
+    { nome: 'Revestimento Térmico Tanques CT-2 (8 tanques)', status: 'aberto',  areas: 'Manutenção, Operação',                    desc: 'Revestimento externo redução perdas calor. Capex ~R$8,6M. 2024–2026.' },
+    { nome: 'Eficiência Energética – Fotovoltaica CT-1,2,3,4', status: 'aberto', areas: 'Manutenção, SSMA, Engenharia',           desc: 'Energia fotovoltaica e outras eficiências elétricas. Capex ~R$2,4M. 2024–2028.' },
+    // Certificações
+    { nome: 'Certificações ISO 22.300 e ISO 27.000',       status: 'planejado', areas: 'Qualidade, TI, SSMA',                    desc: 'Obtenção ISO 22.300 (segurança) e ISO 27.000 (informação).' },
+    { nome: 'Selo GPTW e Certificação Empresa B',          status: 'planejado', areas: 'RH, Administrativo',                     desc: 'Great Place to Work e Empresa B.' },
+    { nome: 'Selo Pró-Ética',                              status: 'planejado', areas: 'Jurídico, Administrativo, RH',           desc: 'Obtenção Selo Pró-Ética CADE/CGU.' },
+  ];
+  projetos.forEach((p, i) => {
+    state.projetos.push({ id: 'pr' + String(i+1).padStart(3,'0'), ...p });
+  });
+
+  saveState();
+}
+
+// ===================== INIT =====================
+// Restore UI from saved state
+document.getElementById('ano-input').value = state.ano;
+document.getElementById('ano-display').textContent = state.ano;
+if (document.getElementById('empresa-nome')) {
+  document.getElementById('empresa-nome').value = state.empresa || '';
+}
+
+// Populate demo data if nothing saved yet
+seedDemoData();
+
+renderPessoas();
+renderObjetivos();
+renderProjetos();
+
+// Restore CEO page if metas exist
+const ceoPessoas = state.pessoas.filter(p => p.cargo === 'ceo');
+if (ceoPessoas.length && state.metas[ceoPessoas[0].id]?.length) {
+  renderPageCEO(ceoPessoas[0].id);
+}
+
+updateDashboard();
+
+// Restore API key
+const savedKey = localStorage.getItem('metaflow_apikey') || '';
+if (savedKey) {
+  const inp = document.getElementById('apikey-input');
+  if (inp) { inp.value = savedKey; saveApiKey(savedKey); }
+}
+</script>
+
+<div class="toast-container" id="toast-container"></div>
+
+<!-- MODAL INSERIR META MANUAL -->
+<div class="modal-overlay" id="manual-meta-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-plus-circle"></i> Inserir Meta Manualmente</h3>
+      <button class="btn btn-ghost" onclick="closeModal('manual-meta-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="alert alert-info" style="font-size:12px;margin-bottom:16px">
+      <i class="fas fa-thumbtack"></i> Metas inseridas manualmente ficam <strong>fixadas</strong> — não são substituídas ou apagadas pela IA e servem de base para derivação.
+    </div>
+    <div id="manual-meta-pessoa-info" style="margin-bottom:14px;padding:10px 12px;background:var(--surface2);border-radius:6px;font-size:13px"></div>
+    <div class="form-group">
+      <label>Objetivo Estratégico Relacionado</label>
+      <select id="manual-meta-obj"></select>
+    </div>
+    <div class="form-group">
+      <label>Descrição da Meta</label>
+      <textarea id="manual-meta-texto" placeholder="Descreva a meta de forma clara e mensurável..." rows="4"></textarea>
+    </div>
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group">
+        <label>Peso (%)</label>
+        <input type="number" id="manual-meta-peso" value="20" min="1" max="100">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-primary" onclick="confirmarMetaManual()">
+        <i class="fas fa-thumbtack"></i> Salvar Meta Fixada
+      </button>
+      <button class="btn btn-outline" onclick="closeModal('manual-meta-modal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REPLICAR META -->
+<div class="modal-overlay" id="replicar-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-copy"></i> Replicar Meta para Profissional</h3>
+      <button class="btn btn-ghost" onclick="closeModal('replicar-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="replicar-meta-preview" style="padding:12px;background:var(--surface2);border-radius:8px;font-size:13px;line-height:1.5;margin-bottom:16px;border-left:3px solid var(--primary)"></div>
+    <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px">Selecione o destino:</div>
+    <div class="pessoa-select-modal" id="replicar-pessoas-list"></div>
+    <div style="margin-top:16px;display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="confirmarReplicar()"><i class="fas fa-copy"></i> Replicar</button>
+      <button class="btn btn-outline" onclick="closeModal('replicar-modal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DERIVAR META -->
+<div class="modal-overlay" id="derivar-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-code-branch"></i> Derivar Meta para Profissional</h3>
+      <button class="btn btn-ghost" onclick="closeModal('derivar-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="derivar-meta-preview" style="padding:12px;background:var(--surface2);border-radius:8px;font-size:13px;line-height:1.5;margin-bottom:8px;border-left:3px solid var(--accent)"></div>
+    <div class="alert alert-info" style="margin-bottom:12px;font-size:12px">
+      <i class="fas fa-info-circle"></i>
+      A meta derivada será marcada como <strong>Fixada (Prioritária)</strong> e não será apagada ao regerar metas com IA.
+    </div>
+    <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px">Selecione o destino:</div>
+    <div class="pessoa-select-modal" id="derivar-pessoas-list"></div>
+    <div style="margin-top:16px;display:flex;gap:10px">
+      <button class="btn btn-accent" onclick="confirmarDerivar()"><i class="fas fa-code-branch"></i> Derivar Meta</button>
+      <button class="btn btn-outline" onclick="closeModal('derivar-modal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL APAGAR NÍVEL -->
+<div class="modal-overlay" id="apagar-nivel-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3 class="modal-title" style="color:var(--danger)"><i class="fas fa-trash-alt"></i> Apagar Metas do Nível</h3>
+      <button class="btn btn-ghost" onclick="closeModal('apagar-nivel-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <p id="apagar-nivel-msg" style="font-size:13px;margin-bottom:20px;color:var(--text2)"></p>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-danger-ghost" style="border:1px solid var(--danger)" onclick="confirmarApagarNivel()">
+        <i class="fas fa-trash-alt"></i> Confirmar Apagar
+      </button>
+      <button class="btn btn-outline" onclick="closeModal('apagar-nivel-modal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
